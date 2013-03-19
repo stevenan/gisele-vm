@@ -3,11 +3,31 @@ require 'gisele-vm'
 
 class Listener
 
+  def initialize
+    @start_array=[]
+    @end_array=[]
+    @start_time=Hash.new
+  end
+
   def call(event)
     prog      = event.prog
     type      = event.type
     task_name = event.args.first
     puts "SEEN: #{task_name}:#{type} (#{prog.puid} with parent #{prog.root})"
+
+    if "#{type}"=="start" && !@start_array.include?("#{prog.puid}")
+        @start_array.push("#{prog.puid}")
+        @start_time["#{prog.puid}"]=Time.now
+    elsif "#{type}"=="end"
+        @start_array.delete("#{prog.puid}")
+        @end_array.push("#{prog.puid}")
+        time_needed=Time.now-@start_time["#{prog.puid}"]
+        puts "Task #{prog.puid} finished after #{time_needed.round.to_i} seconds"
+    end
+    puts "Tasks started but not ended yet : "
+    puts @start_array.inspect
+    puts "Tasks ended : "
+    puts @end_array.inspect
   end
   
 end
