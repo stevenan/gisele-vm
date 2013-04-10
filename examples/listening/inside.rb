@@ -4,9 +4,10 @@ require 'gisele-vm'
 class Listener
 
   def initialize
-    @start_array=[]
-    @end_array=[]
-    @start_time=Hash.new
+    @start_array=[] #Array used to store id of started tasks
+    @end_array=[] #Array used to store id of ended tasks
+    @start_time=Hash.new #Hash used to store start time of tasks
+    @task_end_time=Hash.new{|hash,key| hash[key]=[]} #hash used to store time needed for tasks
   end
 
   def call(event)
@@ -15,14 +16,27 @@ class Listener
     task_name = event.args.first
     puts "SEEN: #{task_name}:#{type} (#{prog.puid} with parent #{prog.root})"
 
+    #If a task is started
     if "#{type}"=="start" && !@start_array.include?("#{prog.puid}")
-        @start_array.push("#{prog.puid}")
-        @start_time["#{prog.puid}"]=Time.now
+        @start_array.push("#{prog.puid}") #Add the id in the start array
+        @start_time["#{prog.puid}"]=Time.now #Define the start time of the task and store it in the map
+    
+    #Else if a task is ended
     elsif "#{type}"=="end"
-        @start_array.delete("#{prog.puid}")
-        @end_array.push("#{prog.puid}")
-        time_needed=Time.now-@start_time["#{prog.puid}"]
-        puts "Task #{prog.puid} finished after #{time_needed.round.to_i} seconds"
+        @start_array.delete("#{prog.puid}") #Delete the id of the task in the started task array
+        @end_array.push("#{prog.puid}") #Add it to the ended task array
+        time_needed=Time.now-@start_time["#{prog.puid}"] #Compute the time needed to do the tasks
+        puts "Task #{prog.puid} #{task_name} finished after #{time_needed.round.to_i} seconds"
+        @task_end_time["#{task_name}"].push(time_needed) #Store the time needed
+        sum_duration=0
+        @task_end_time["#{task_name}"].each{|e| sum_duration+=e} #Sum all duration of all occurences of a task
+        size=@task_end_time["#{task_name}"].length
+        mean=sum_duration/size #Compute mean
+        puts "Mean time of #{task_name} is #{mean}"
+        sum_variance=0
+        @task_end_time["#{task_name}"].each{|e| sum_variance+=(e-mean)**2}
+        variance=sum_variance/size #Compute variance
+        puts "Variance is equal to #{variance}"
     end
     puts "Tasks started but not ended yet : "
     puts @start_array.inspect
