@@ -1,5 +1,4 @@
 require 'sequel'
-require 'date'
 
 class DBAccess
 
@@ -16,7 +15,7 @@ class DBAccess
 
 	def createCurrentTask(id, name, treatment, patient)
 		Int time = @taskinfo_set.where(:taskname=>name).get(:meantime)
-		@currenttask.insert(:vmid=>id, :taskname=>name, :treatmentname=>treatment, :patientname=>patient)
+		@currenttask.insert(:vmid=>id, :taskname=>name, :treatmentname=>treatment, :patientname=>patient, :timeleft=>time)
 		
 	end
 
@@ -33,23 +32,15 @@ class DBAccess
 		@patient_set.select_map(:name)
 	end
 
-	def getAvailablePatientArray
-		@patient_set.where(:treatmentname => '').select_map(:name)
-	end
-
 	def getTreatmentArray
 		@treatment_set.select_map(:name)
 	end
 	
 	def addPatient(name)
-		@patient_set.insert(:name => name, :treatmentname => '', :treatmentdate => '')
+		@patient_set.insert(:name => name)
 	end
 
-	def updatePatient(name, treatment)
-		@patient_set.where(:name => name).update(:treatmentname => treatment, :treatmentdate => Date.today.to_s)
-	end
-
-	def addFluent(patient, fluent, value)
+	def addFLuent(patient, fluent, value)
 		@fluent_set.insert(:fluentname => fluent, :patientname => patient, :value=>value)
 	end
 	
