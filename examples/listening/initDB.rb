@@ -14,7 +14,6 @@ class InitDB
 		#insert a patient example
 		#patient_set = DB[:patient]
 		#patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '15/07/2013')
-		#patient_set.insert(:name => 'Jean2', :treatmentname => '', :treatmentdate => '15/07/2013')
 	end
 
 	### Create variable table if it doesn't exist
@@ -36,7 +35,6 @@ class InitDB
 		#insert a treatment example
 		treatment_set = DB[:treatment]
 		treatment_set.insert(:name => 'Treatment', :description => 'An example of treatment', :starttask => 'Consultation')
-		#treatment_set.insert(:name => 'Treatment2', :description => 'An example of treatment', :starttask => 'Consultation')
 	end
 
         ### Create task info instance table if it doesn't exist

@@ -67,28 +67,43 @@ class MyGUI
 		  pady 20
 		  grid('row'=>1, 'column'=>0)
 		}
-		bar = TkScrollbar.new(f1).pack('side'=>'right', 'fill'=>'y')
-		list = TkListbox.new(f1).pack('side'=>'left', 'fill'=>'both', 'expand'=>true)
+		tbar = TkScrollbar.new(f1) do
+			pack('side'=>'right', 'fill'=>'y')
+		end
+		tlist = TkListbox.new(f1) do
+			selectmode 'single'
+			exportselection '0'
+			pack('side'=>'left', 'fill'=>'both', 'expand'=>true)
+		end
 		treatment_array = $dbAccess.getTreatmentArray
                 treatment_array.each{|i|
-			list.insert('end', i)
+			tlist.insert('end', i)
 		}
-		list.yscrollbar(bar)
+		tlist.yscrollbar(tbar)
 		f2 = TkFrame.new($win) {
 		  padx 15
 		  pady 20
 		  grid('row'=>1, 'column'=>1)
 		}
-		bar = TkScrollbar.new(f2).pack('side'=>'right', 'fill'=>'y')
-		list = TkListbox.new(f2).pack('side'=>'left', 'fill'=>'both', 'expand'=>true)
-		patient_array = $dbAccess.getPatientArray
+		pbar = TkScrollbar.new(f2).pack('side'=>'right', 'fill'=>'y')
+		plist = TkListbox.new(f2) do			
+			exportselection '0'
+			selectmode 'single'
+			pack('side'=>'left', 'fill'=>'both', 'expand'=>true)
+		end
+		patient_array = $dbAccess.getAvailablePatientArray
                 patient_array.each{|i|
-			list.insert('end', i)
+			plist.insert('end', i)
 		}
-		list.yscrollbar(bar)
+		plist.yscrollbar(pbar)
 		TkButton.new($win) do
 			text "Validate"
-			command "$win.destroy"
+			command {
+				$dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]))
+				String cmd = "new "+tlist.get(tlist.curselection()[0])
+				puts cmd
+				$win.destroy
+			}
 			state "normal"
 			cursor "watch"
 			font TkFont.new('times 13 bold')
@@ -139,8 +154,6 @@ class MyGUI
 			command{if t0.value!=""
 					$dbAccess.addPatient(t0.value)
 					entry_map.each  do |fluentname,value|
-						puts fluentname
-						puts value
 						$dbAccess.addFluent(t0.value, fluentname.value, value.value)
 					end
 					$win.destroy
@@ -181,7 +194,7 @@ class MyGUI
 		index=1
 		patient_array=$dbAccess.getPatientArray
 		patient_array.each do |patientname|
-			TkLabel.new($win, "width"=>20){
+			TkLabel.new($win, "width"=>20, "borderwidth"=>5){
 				text patientname
 				compound 'center'
 				grid('row'=>index, 'column'=>0)
@@ -190,7 +203,7 @@ class MyGUI
 			$dbAccess.getPatientInfo(patientname).each do |var, val|
 				s+=var+" = "+val+"\n"
 			end
-			TkLabel.new($win, "width"=>20){
+			TkLabel.new($win, "width"=>20, "borderwidth"=>5){
 				text s
 				compound 'center'
 				justify 'left'
@@ -242,5 +255,6 @@ class MyGUI
 
 
 	Tk.mainloop
+	vmok=system('bundle exec ruby inside.rb treatment.gis')
 end
 

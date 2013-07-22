@@ -100,6 +100,8 @@ class MyGUI
 			text "Validate"
 			command {
 				$dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]))
+				String cmd = "new "+tlist.get(tlist.curselection()[0])
+				puts cmd
 				$win.destroy
 			}
 			state "normal"
