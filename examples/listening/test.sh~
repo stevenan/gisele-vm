@@ -1,4 +1,0 @@
-#!/bin/bash
-
-ruby myGUI.rb
-bundle exec ruby inside.rb treatment.gis
