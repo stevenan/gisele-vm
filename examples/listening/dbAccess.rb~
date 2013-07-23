@@ -1,4 +1,5 @@
 require 'sequel'
+require 'date'
 
 class DBAccess
 
@@ -6,16 +7,16 @@ class DBAccess
 		@DB = Sequel.sqlite('myDB.db')
 		@mean_time = Hash.new
 		@taskinfo_set = @DB[:taskinfo]
-		@currenttask_set = @DB[:currenttask]
+		@taskinstance_set = @DB[:taskinstance]
 		@patient_set = @DB[:patient]
 		@treatment_set = @DB[:treatment]
 		@fluent_set = @DB[:fluent]
 	end
 
 
-	def createCurrentTask(id, name, treatment, patient)
+	def createtaskinstance(id, name, treatment, patient)
 		Int time = @taskinfo_set.where(:taskname=>name).get(:meantime)
-		@currenttask.insert(:vmid=>id, :taskname=>name, :treatmentname=>treatment, :patientname=>patient, :timeleft=>time)
+		@taskinstance.insert(:vmid=>id, :taskname=>name, :treatmentname=>treatment, :patientname=>patient, :starttime=>Time.new, :endtime=>'')
 		
 	end
 
@@ -24,12 +25,16 @@ class DBAccess
 	end
 
 	def updateTimer
-		array = @currenttask_set.select_map(:timeleft)
-		array.take_while{|i| i>0}.each{|i| currenttask_set.where(:id=>i).update(:id=>i-1)}
+		array = @taskinstance_set.select_map(:timeleft)
+		array.take_while{|i| i>0}.each{|i| taskinstance_set.where(:id=>i).update(:id=>i-1)}
 	end
 
 	def getPatientArray
 		@patient_set.select_map(:name)
+	end
+
+	def getAvailablePatientArray
+		@patient_set.where(:treatmentname => '').select_map(:name)
 	end
 
 	def getTreatmentArray
@@ -37,10 +42,14 @@ class DBAccess
 	end
 	
 	def addPatient(name)
-		@patient_set.insert(:name => name)
+		@patient_set.insert(:name => name, :treatmentname => '', :treatmentdate => '')
 	end
 
-	def addFLuent(patient, fluent, value)
+	def updatePatient(name, treatment)
+		@patient_set.where(:name => name).update(:treatmentname => treatment, :treatmentdate => Date.today.to_s)
+	end
+
+	def addFluent(patient, fluent, value)
 		@fluent_set.insert(:fluentname => fluent, :patientname => patient, :value=>value)
 	end
 	

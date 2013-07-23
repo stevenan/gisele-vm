@@ -1,5 +1,6 @@
 require 'sequel'
 require 'date'
+require 'time'
 
 class DBAccess
 
@@ -7,16 +8,16 @@ class DBAccess
 		@DB = Sequel.sqlite('myDB.db')
 		@mean_time = Hash.new
 		@taskinfo_set = @DB[:taskinfo]
-		@currenttask_set = @DB[:currenttask]
+		@taskinstance_set = @DB[:taskinstance]
 		@patient_set = @DB[:patient]
 		@treatment_set = @DB[:treatment]
 		@fluent_set = @DB[:fluent]
 	end
 
 
-	def createCurrentTask(id, name, treatment, patient)
+	def createtaskinstance(id, name, treatment, patient)
 		Int time = @taskinfo_set.where(:taskname=>name).get(:meantime)
-		@currenttask.insert(:vmid=>id, :taskname=>name, :treatmentname=>treatment, :patientname=>patient)
+		@taskinstance.insert(:vmid=>id, :taskname=>name, :treatmentname=>treatment, :patientname=>patient, :starttime=>Time.new, :endtime=>'')
 		
 	end
 
@@ -25,8 +26,8 @@ class DBAccess
 	end
 
 	def updateTimer
-		array = @currenttask_set.select_map(:timeleft)
-		array.take_while{|i| i>0}.each{|i| currenttask_set.where(:id=>i).update(:id=>i-1)}
+		array = @taskinstance_set.select_map(:timeleft)
+		array.take_while{|i| i>0}.each{|i| taskinstance_set.where(:id=>i).update(:id=>i-1)}
 	end
 
 	def getPatientArray

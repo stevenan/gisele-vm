@@ -67,7 +67,7 @@ Gisele::VM.new(bytecode) do |vm|
   # Register the interactive console
   vm.register Gisele::VM::Console.new
 
-  #GUI
+  #gui
   @gui = MyGUI.new(vm)
 
   # Subscribe our listener to the VM events
