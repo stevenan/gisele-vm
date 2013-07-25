@@ -4,12 +4,12 @@ require_relative 'myGUI'
 
 class Listener
 
-  def initialize
+  def initialize(gui)
     @start_array=[] #Array used to store id of started tasks
     @end_array=[] #Array used to store id of ended tasks
     @start_time=Hash.new #Hash used to store start time of tasks
     @task_end_time=Hash.new{|hash,key| hash[key]=[]} #hash used to store time needed for tasks
-    @gui
+    @gui=gui
   end
   
   def call(event)
@@ -17,7 +17,10 @@ class Listener
     type      = event.type
     task_name = event.args.first
     puts "SEEN: #{task_name}:#{type} (#{prog.puid} with parent #{prog.root})"
-
+    
+    if prog.puid!=prog.root #root tasks are not shown in the gui
+	puts"CHILD"
+    end
     #If a task is started
     if "#{type}"=="start" && !@start_array.include?("#{prog.puid}")
         @start_array.push("#{prog.puid}") #Add the id in the start array
@@ -25,6 +28,7 @@ class Listener
     
     #Else if a task is ended
     elsif "#{type}"=="end"
+	@gui.updateFrame
         @start_array.delete("#{prog.puid}") #Delete the id of the task in the started task array
         @end_array.push("#{prog.puid}") #Add it to the ended task array
         time_needed=Time.now-@start_time["#{prog.puid}"] #Compute the time needed to do the tasks
@@ -68,10 +72,10 @@ Gisele::VM.new(bytecode) do |vm|
   vm.register Gisele::VM::Console.new
 
   #GUI
-  @gui = MyGUI.new(vm)
+  gui = MyGUI.new(vm)
 
   # Subscribe our listener to the VM events
-  vm.subscribe Listener.new
+  vm.subscribe Listener.new(gui)
 
   # trap CTRL-C and shut down the VM
   trap('INT'){

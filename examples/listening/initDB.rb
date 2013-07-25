@@ -45,7 +45,7 @@ class InitDB
 		  String :precondition
 		  Boolean :decision
 		end
-		#insert a treatment example
+		#insert a task examples
 		taskinfo_set = DB[:taskinfo]
 		taskinfo_set.insert(:taskname => 'Consultation', :treatmentname => 'Treatment', :precondition => "", :decision => false)
 		taskinfo_set.insert(:taskname => 'Endoscopy', :treatmentname => 'Treatment', :precondition => "", :decision => false)
@@ -64,6 +64,10 @@ class InitDB
 		  Time :starttime
 		  Time :endtime
 		end
+		#insert a task info examples
+		taskinstance_set = DB[:taskinstance]
+		taskinstance_set.insert(:taskname => 'Consultation', :treatmentname => 'Treatment', :patientname => "steven")
+		taskinstance_set.insert(:taskname => 'Endoscopy', :treatmentname => 'Treatment', :patientname => "steven")
 	end
 
 

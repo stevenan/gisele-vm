@@ -14,7 +14,6 @@ class DBAccess
 		@fluent_set = @DB[:fluent]
 	end
 
-
 	def createtaskinstance(id, name, treatment, patient)
 		Int time = @taskinfo_set.where(:taskname=>name).get(:meantime)
 		@taskinstance.insert(:vmid=>id, :taskname=>name, :treatmentname=>treatment, :patientname=>patient, :starttime=>Time.new, :endtime=>'')
@@ -60,6 +59,10 @@ class DBAccess
 	
 	def getPatientInfo(name)
 		patient_info = @fluent_set.where(:patientname => name).to_hash(:fluentname, :value)
+	end
+
+	def getTaskInstances
+		task_instances = @taskinstance_set.select_map([:patientname, :treatmentname , :taskname])
 	end
 
 end

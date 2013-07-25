@@ -1,5 +1,6 @@
 require 'sequel'
 require 'date'
+require 'time'
 
 class DBAccess
 
@@ -12,7 +13,6 @@ class DBAccess
 		@treatment_set = @DB[:treatment]
 		@fluent_set = @DB[:fluent]
 	end
-
 
 	def createtaskinstance(id, name, treatment, patient)
 		Int time = @taskinfo_set.where(:taskname=>name).get(:meantime)
@@ -59,6 +59,10 @@ class DBAccess
 	
 	def getPatientInfo(name)
 		patient_info = @fluent_set.where(:patientname => name).to_hash(:fluentname, :value)
+	end
+
+	def getTaskInstances
+		task_instances = @taskinstance_set.
 	end
 
 end

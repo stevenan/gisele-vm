@@ -2,37 +2,43 @@ require 'tk'
 require_relative 'dbAccess'
 
 class MyGUI
+
 	def initialize(vm)
-		Thread.new { Tk.mainloop } 
-		@vm=vm
-	end
-		root = TkRoot.new do
+		@root = TkRoot.new do
 		  minsize(200,200)
 		  title "Main"
+		  resizable 0,0
 		end
-	
-		$dbAccess = DBAccess.new	
+		@frame1 = TkFrame.new(@root) {pack('padx'=>0, 'pady'=>0,  'fill'=>'x')}
+		@frame2 = TkFrame.new(@root){pack('padx'=>0, 'pady'=>0,  'fill'=>'x', 'fill'=>'y')}
+		createGui(vm)
+		@dbAccess = DBAccess.new
+	end
+
+	def createGui(vm)
+			
 		#Column of the main window
+		
 		br = ["Patient name", "Treatment", "Current task", "Warning", "Buttons"].collect {|c|
-		  TkLabel.new(root, "text"=>c, "borderwidth"=>5, "relief"=>"ridge", "width"=>20)
+		  TkLabel.new(@frame1, "text"=>c, "borderwidth"=>5, "relief"=>"ridge", "width"=>20)
 		}
 		TkGrid.grid(br[0], br[1], br[2], br[3], br[4])
 
 
 		#Lines to separate data
-		s0 = Tk::Tile::Separator.new(root) do
+		s0 = Tk::Tile::Separator.new(@root) do
 		   orient 'vertical'
 		   place('height' => 180, 'x' => 172, 'y' => 30)
 		end
-		s1 = Tk::Tile::Separator.new(root) do
+		s1 = Tk::Tile::Separator.new(@root) do
 		   orient 'vertical'
 		   place('height' => 180, 'x' => 344, 'y' => 30)
 		end
-		s2 = Tk::Tile::Separator.new(root) do
+		s2 = Tk::Tile::Separator.new(@root) do
 		   orient 'vertical'
 		   place('height' => 180, 'x' => 516, 'y' => 30)
 		end
-		s3 = Tk::Tile::Separator.new(root) do
+		s3 = Tk::Tile::Separator.new(@root) do
 		   orient 'vertical'
 		   place('height' => 180, 'x' => 688, 'y' => 30)
 		end
@@ -40,12 +46,12 @@ class MyGUI
 
 		#window generated from menu
 		newTreatment_proc = Proc.new {
-		  TkToplevel.new(root){
+		  TkToplevel.new(@root){
 		    title "New Treatment"
 		  }
 		}
 		newPatient_proc = Proc.new {
-		  TkToplevel.new(root){
+		  TkToplevel.new(@root){
 		    title "New Treatment"
 		  }
 		}
@@ -77,7 +83,7 @@ class MyGUI
 				exportselection '0'
 				pack('side'=>'left', 'fill'=>'both', 'expand'=>true)
 			end
-			treatment_array = $dbAccess.getTreatmentArray
+			treatment_array = @dbAccess.getTreatmentArray
 		        treatment_array.each{|i|
 				tlist.insert('end', i)
 			}
@@ -93,7 +99,7 @@ class MyGUI
 				selectmode 'single'
 				pack('side'=>'left', 'fill'=>'both', 'expand'=>true)
 			end
-			patient_array = $dbAccess.getAvailablePatientArray
+			patient_array = @dbAccess.getAvailablePatientArray
 		        patient_array.each{|i|
 				plist.insert('end', i)
 			}
@@ -101,9 +107,11 @@ class MyGUI
 			TkButton.new($win) do
 				text "Validate"
 				command {
-					#$dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]))
-					#@vm.start(:main, :Treatment)
-					$win.destroy
+					if (not (plist.curselection()).empty?) && (not (tlist.curselection()).empty?)
+						#@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]))
+						#vm.start(:main, [ tlist.get(tlist.curselection()[0]).strip.to_sym])
+						$win.destroy
+					end
 				}
 				state "normal"
 				cursor "watch"
@@ -153,9 +161,9 @@ class MyGUI
 			end
 			TkButton.new($win) do
 				command{if t0.value!=""
-						$dbAccess.addPatient(t0.value)
+						@dbAccess.addPatient(t0.value)
 						entry_map.each  do |fluentname,value|
-							$dbAccess.addFluent(t0.value, fluentname.value, value.value)
+							@dbAccess.addFluent(t0.value, fluentname.value, value.value)
 						end
 						$win.destroy
 					else
@@ -193,7 +201,7 @@ class MyGUI
 			  grid('row'=>0, 'column'=>1)
 			}
 			index=1
-			patient_array=$dbAccess.getPatientArray
+			patient_array=@dbAccess.getPatientArray
 			patient_array.each do |patientname|
 				TkLabel.new($win, "width"=>20, "borderwidth"=>5){
 					text patientname
@@ -201,7 +209,7 @@ class MyGUI
 					grid('row'=>index, 'column'=>0)
 				}
 				String s=""
-				$dbAccess.getPatientInfo(patientname).each do |var, val|
+				@dbAccess.getPatientInfo(patientname).each do |var, val|
 					s+=var+" = "+val+"\n"
 				end
 				TkLabel.new($win, "width"=>20, "borderwidth"=>5){
@@ -224,13 +232,9 @@ class MyGUI
 		}
 		###########
 		
-		closeall=Proc.new{
-			@vm.start(:main, :Treatment)
-			#Tk.exit
-		}
 
 		#menu
-		menu = TkMenu.new(root)
+		menu = TkMenu.new(@root)
 
 		menu.add('command',
 			      'label'     => "New treatment",
@@ -247,7 +251,7 @@ class MyGUI
 		menu.add('separator')
 		menu.add('command',
 			      'label'     => "Exit",
-			      'command' => closeall,
+			      'command' => 'exit',
 			      'underline' => 0)
 
 		menu_bar = TkMenu.new
@@ -256,8 +260,53 @@ class MyGUI
 			     'label' => "File")
 
 
-		root.menu(menu_bar)
-		
+		@root.menu(menu_bar)
+		Thread.new { Tk.mainloop }
+	end
+
+	def addLine
+		@frame2.unpack
+		@frame2 = TkFrame.new(@root){pack('padx'=>0, 'pady'=>0,  'fill'=>'x', 'fill'=>'y')}
+		puts "please"
+		data_map=@dbAccess.getTaskInstances
+		bool=true
+		line=data_map.each{|patient, treatment, task|
+			if bool
+				color="white"
+			else
+				color="grey"
+			end
+			p=TkLabel.new(@frame2, "text"=>patient, "borderwidth"=>5, "width"=>20, "background"=>color)
+			t=TkLabel.new(@frame2, "text"=>treatment, "borderwidth"=>5, "width"=>20, "background"=>color)
+			ta=TkLabel.new(@frame2, "text"=>task, "borderwidth"=>5, "width"=>20, "background"=>color)
+			w=TkLabel.new(@frame2, "text"=>"", "borderwidth"=>5, "width"=>20, "background"=>color)
+			b=TkButton.new($win) do
+				text "Validate"
+				state "normal"
+				cursor "watch"
+				font TkFont.new('times 12')
+				width 18
+				background color
+			end
+			TkGrid.grid(p,t,ta,w,b)
+			bool=!bool
+		}
+=begin
+		line = ["Patient name", "Treatment", "Current task", ""].collect {|e|
+		  TkLabel.new(@frame2, "text"=>e, "borderwidth"=>5, "width"=>20, "background"=>"red")
+		}
+		button=TkButton.new($win) do
+				text "Validate"
+				state "normal"
+				cursor "watch"
+				font TkFont.new('times 12')
+				width 18
+				background "red"
+			end
+		TkGrid.grid(line[0], line[1], line[2], line[3],button)
+=end
+	end
+
 
 
 end
