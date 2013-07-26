@@ -16,6 +16,7 @@ class InitDB
 		#patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '15/07/2013')
 	end
 
+
 	### Create variable table if it doesn't exist
 	if not DB.table_exists?(:fluent)
 		DB.create_table :fluent do
@@ -25,6 +26,7 @@ class InitDB
 		end
 	end
 
+
 	### Create treatment table if it doesn't exist
 	if not DB.table_exists?(:treatment)
 		DB.create_table :treatment do
@@ -32,10 +34,12 @@ class InitDB
 		  String :description
 		  String :starttask
 		end
-		#insert a treatment example
-		treatment_set = DB[:treatment]
-		treatment_set.insert(:name => 'Treatment', :description => 'An example of treatment', :starttask => 'Consultation')
 	end
+	#insert a treatment example
+	treatment_set = DB[:treatment]
+	treatment_set.delete
+	treatment_set.insert(:name => 'Treatment', :description => 'An example of treatment', :starttask => 'Consultation')
+
 
         ### Create task info instance table if it doesn't exist
 	if not DB.table_exists?(:taskinfo)
@@ -45,14 +49,16 @@ class InitDB
 		  String :precondition
 		  Boolean :decision
 		end
-		#insert a task examples
-		taskinfo_set = DB[:taskinfo]
-		taskinfo_set.insert(:taskname => 'Consultation', :treatmentname => 'Treatment', :precondition => "", :decision => false)
-		taskinfo_set.insert(:taskname => 'Endoscopy', :treatmentname => 'Treatment', :precondition => "", :decision => false)
-		taskinfo_set.insert(:taskname => 'Chemotherapy', :treatmentname => 'Treatment', :precondition => "", :decision => false)
-		taskinfo_set.insert(:taskname => 'Biopsy', :treatmentname => 'Treatment', :precondition => "", :decision => false)
-		taskinfo_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :precondition => "", :decision => false)
 	end
+	#insert a task examples
+	taskinfo_set = DB[:taskinfo]
+	taskinfo_set.delete
+	taskinfo_set.insert(:taskname => 'Consultation', :treatmentname => 'Treatment', :precondition => "", :decision => false)
+	taskinfo_set.insert(:taskname => 'Endoscopy', :treatmentname => 'Treatment', :precondition => "", :decision => false)
+	taskinfo_set.insert(:taskname => 'Chemotherapy', :treatmentname => 'Treatment', :precondition => "", :decision => false)
+	taskinfo_set.insert(:taskname => 'Biopsy', :treatmentname => 'Treatment', :precondition => "", :decision => false)
+	taskinfo_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :precondition => "", :decision => false)
+
 
 	### Create current task instance table if it doesn't exist
 	if not DB.table_exists?(:taskinstance)
@@ -64,11 +70,12 @@ class InitDB
 		  Time :starttime
 		  Time :endtime
 		end
-		#insert a task info examples
-		taskinstance_set = DB[:taskinstance]
-		taskinstance_set.insert(:taskname => 'Consultation', :treatmentname => 'Treatment', :patientname => "steven")
-		taskinstance_set.insert(:taskname => 'Endoscopy', :treatmentname => 'Treatment', :patientname => "steven")
 	end
+	#insert a task info examples
+	taskinstance_set = DB[:taskinstance]
+	taskinstance_set.delete
+	taskinstance_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :patientname => "Paul", :starttime => "", :endtime => "")
+	taskinstance_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :patientname => "Joe", :starttime => "", :endtime => "2")
 
 
 end

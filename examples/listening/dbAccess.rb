@@ -14,19 +14,12 @@ class DBAccess
 		@fluent_set = @DB[:fluent]
 	end
 
-	def createtaskinstance(id, name, treatment, patient)
-		Int time = @taskinfo_set.where(:taskname=>name).get(:meantime)
-		@taskinstance.insert(:vmid=>id, :taskname=>name, :treatmentname=>treatment, :patientname=>patient, :starttime=>Time.new, :endtime=>'')
-		
+	def updatetasktime(id, column)
+		@taskinstance_set.where(:vmid=>id).update(column => Date.today.to_s)
 	end
 
 	def updateMean(taskname,value)
 		@taskinfo_set.where(:taskname => taskname).update(:meantime => value)
-	end
-
-	def updateTimer
-		array = @taskinstance_set.select_map(:timeleft)
-		array.take_while{|i| i>0}.each{|i| taskinstance_set.where(:id=>i).update(:id=>i-1)}
 	end
 
 	def getPatientArray
@@ -57,12 +50,20 @@ class DBAccess
 		@fluent_set.where(:fluentname => fluent, :patientname => patient).update(:value=>value)
 	end
 	
-	def getPatientInfo(name)
+	def getPatientFluents(name)
 		patient_info = @fluent_set.where(:patientname => name).to_hash(:fluentname, :value)
 	end
 
+	def getPatientTreatment(name)
+		@patient_set.where(:name=>name).get(:treatmentname)
+	end
+
 	def getTaskInstances
-		task_instances = @taskinstance_set.select_map([:patientname, :treatmentname , :taskname])
+		task_instances = @taskinstance_set.where(:endtime=>"").select_map([:vmid, :patientname, :treatmentname , :taskname])
+	end
+
+	def addTaskInstance(id, patient, task, treatment)
+		@taskinstance_set.insert(:vmid=>id, :taskname => task, :treatmentname => treatment, :patientname => patient, :starttime=>"", :endtime=>"")
 	end
 
 end

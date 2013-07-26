@@ -18,9 +18,11 @@ class Listener
     task_name = event.args.first
     puts "SEEN: #{task_name}:#{type} (#{prog.puid} with parent #{prog.root})"
     
-    if prog.puid!=prog.root #root tasks are not shown in the gui
-	puts"CHILD"
+    if prog.puid!=prog.root #new treatments are handled by the gui
+	puts 'child'
+	@gui.createTaskInstance(prog.puid, task_name)
     end
+    
     #If a task is started
     if "#{type}"=="start" && !@start_array.include?("#{prog.puid}")
         @start_array.push("#{prog.puid}") #Add the id in the start array
