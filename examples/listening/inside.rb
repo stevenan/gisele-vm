@@ -18,8 +18,8 @@ class Listener
     task_name = event.args.first
     puts "SEEN: #{task_name}:#{type} (#{prog.puid} with parent #{prog.root})"
     
-    if prog.puid!=prog.root #new treatments are handled by the gui
-	puts 'child'
+    if "#{type}"=="start" && prog.puid!=prog.root #new treatments are handled by the gui
+	#puts 'child'
 	@gui.createTaskInstance(prog.puid, task_name)
     end
     

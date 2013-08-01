@@ -11,11 +11,12 @@ class InitDB
 		  String :treatmentname
 		  String :treatmentdate
 		end
-		#insert a patient example
-		#patient_set = DB[:patient]
-		#patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '15/07/2013')
 	end
-
+	#insert a patient example
+	patient_set = DB[:patient]
+	patient_set.delete
+	patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '')
+	patient_set.insert(:name => 'Pierre', :treatmentname => '', :treatmentdate => '')
 
 	### Create variable table if it doesn't exist
 	if not DB.table_exists?(:fluent)
@@ -25,7 +26,8 @@ class InitDB
 		  String :value
 		end
 	end
-
+	fluent_set = DB[:fluent]
+	fluent_set.delete
 
 	### Create treatment table if it doesn't exist
 	if not DB.table_exists?(:treatment)
@@ -74,8 +76,8 @@ class InitDB
 	#insert a task info examples
 	taskinstance_set = DB[:taskinstance]
 	taskinstance_set.delete
-	taskinstance_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :patientname => "Paul", :starttime => "", :endtime => "")
-	taskinstance_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :patientname => "Joe", :starttime => "", :endtime => "2")
+	#taskinstance_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :patientname => "Paul", :starttime => "", :endtime => "")
+	#taskinstance_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :patientname => "Joe", :starttime => "", :endtime => "2")
 
 
 end

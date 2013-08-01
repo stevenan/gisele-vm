@@ -15,7 +15,7 @@ class DBAccess
 	end
 
 	def updatetasktime(id, column)
-		@taskinstance_set.where(:vmid=>id).update(column => Date.today.to_s)
+		@taskinstance_set.where(:vmid=>id).update(column => Time.now)
 	end
 
 	def updateMean(taskname,value)
@@ -64,6 +64,26 @@ class DBAccess
 
 	def addTaskInstance(id, patient, task, treatment)
 		@taskinstance_set.insert(:vmid=>id, :taskname => task, :treatmentname => treatment, :patientname => patient, :starttime=>"", :endtime=>"")
+	end
+
+	def isStarted(id)		
+		t = @taskinstance_set.where(:vmid=>id, :starttime=>"").select_map(:taskname)
+		not t.length==0
+	end
+
+	def getTime(task, treatment)
+		times=@taskinstance_set.exclude(:endtime=>"").where(:taskname=>task, :treatmentname=>treatment).select_map([:starttime, :endtime])
+		duration=[]
+		times.each{|s,e| duration.push(e-s)}
+		total=0
+		variance=0
+		mean=0
+		if (duration.length > 0)
+			duration.each{|t| total+=t}
+			mean=total/(duration.length)
+			duration.each{|t| variance+=((t-mean)**2)}
+		end
+		[mean, variance]
 	end
 
 end

@@ -18,8 +18,8 @@ class Listener
     task_name = event.args.first
     puts "SEEN: #{task_name}:#{type} (#{prog.puid} with parent #{prog.root})"
     
-    if prog.puid!=prog.root #new treatments are handled by the gui
-	puts 'child'
+    if "#{type}"=="start" && prog.puid!=prog.root #new treatments are handled by the gui
+	#puts 'child'
 	@gui.createTaskInstance(prog.puid, task_name)
     end
     
@@ -30,6 +30,7 @@ class Listener
     
     #Else if a task is ended
     elsif "#{type}"=="end"
+	#@gui.updateFrame
         @start_array.delete("#{prog.puid}") #Delete the id of the task in the started task array
         @end_array.push("#{prog.puid}") #Add it to the ended task array
         time_needed=Time.now-@start_time["#{prog.puid}"] #Compute the time needed to do the tasks

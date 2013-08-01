@@ -11,7 +11,8 @@ class MyGUI
 		end
 		@frame1 = TkFrame.new(@root) {pack('padx'=>0, 'pady'=>0,  'fill'=>'x')}
 		@frame2 = TkFrame.new(@root){pack('padx'=>0, 'pady'=>0,  'fill'=>'x', 'fill'=>'y')}
-		createGui(vm)
+		@@vm=vm
+		createGui(@@vm)
 		@@dbAccess = DBAccess.new
 		@vmid=0
 		@@patient_concerned=""
@@ -113,7 +114,6 @@ class MyGUI
 					if (not (plist.curselection()).empty?) && (not (tlist.curselection()).empty?)
 						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]))
 						@@patient_concerned=plist.get(plist.curselection()[0])
-						puts "ici on a le patient #{@@patient_concerned}"
 						vm.start(:main, [ tlist.get(tlist.curselection()[0]).strip.to_sym])
 						new_window.destroy
 					end
@@ -204,7 +204,7 @@ class MyGUI
 
 		################# view Patient window
 		view_win=Proc.new{
-		  	new_window = TkToplevel.new{ title "New Treatment"}
+		  	new_window = TkToplevel.new{ title "Patient profiles"}
 	
 			TkLabel.new(new_window, "width"=>20) {
 			  text "Patient: "
@@ -247,10 +247,8 @@ class MyGUI
 			end
 		}
 		###########
-		test=Proc.new{
-			input = :ended.map{|x| Bytecode::Grammar.parse(x, :root => :arg).value}
-			vm.resume(2,input)
-		}
+
+		stopall=Proc.new{vm.stop}
 
 		#menu
 		menu = TkMenu.new(@root)
@@ -270,7 +268,7 @@ class MyGUI
 		menu.add('separator')
 		menu.add('command',
 			      'label'     => "Exit",
-			      'command' => test,
+			      'command' => stopall,
 			      'underline' => 0)
 
 		menu_bar = TkMenu.new
@@ -287,13 +285,13 @@ class MyGUI
 		@frame2.unpack
 		@frame2 = TkFrame.new(@root){pack('padx'=>0, 'pady'=>0,  'fill'=>'x', 'fill'=>'y')}
 		data_map=@@dbAccess.getTaskInstances
-		color_boolean=true
+		color="white"
 		line=data_map.each{|vmid, patient, treatment, task|
-			tlabel="start"
-			if color_boolean
-				color="white"
+			
+			if @@dbAccess.isStarted(vmid)
+				tlabel="start"
 			else
-				color="grey"
+				tlabel="stop"
 			end
 			p=TkLabel.new(@frame2, "text"=>patient, "borderwidth"=>5, "width"=>20, "background"=>color)
 			t=TkLabel.new(@frame2, "text"=>treatment, "borderwidth"=>5, "width"=>20, "background"=>color)
@@ -310,12 +308,14 @@ class MyGUI
 					 if tlabel=="start"
 						puts "start #{vmid}"
 						@@dbAccess.updatetasktime(vmid, :starttime)
+						tlabel="stop"
+						b.text(tlabel)
 					 else
 						puts "stop #{vmid}"
 						@@dbAccess.updatetasktime(vmid, :endtime)
+						@@patient_concerned=patient
+						@@vm.resume(vmid,[:ended])
 					 end
-					 tlabel="stop"
-					 b.text(tlabel)
 				}
 			end
 
@@ -326,6 +326,17 @@ class MyGUI
 				font TkFont.new('times 12')
 				background color
 				width 7
+				command{
+					times=@@dbAccess.getTime(task, treatment)
+					box= TkToplevel.new{ title "Task informations !"}
+					s="Task #{task} from treatment #{treatment} \n"
+					s+="Mean time = #{times[0]} \n"
+					s+="Variance = #{times[1]}"
+					TkLabel.new(box) {
+						text s
+						grid('row'=>0, 'column'=>0)
+					}
+				}
 			end
 
 			TkGrid.grid(p,t,ta,w,b,b1)
@@ -339,10 +350,10 @@ class MyGUI
 	def createTaskInstance(id, task_name)
 		@vmid=id
 		treatment=@@dbAccess.getPatientTreatment(@@patient_concerned)
-		puts "id = #{id}"
-		puts "task = #{task_name}"
-		puts "treatment = #{treatment}"
-		puts "patient_concerned = #{@@patient_concerned}"
+		#puts "id = #{id}"
+		#puts "task = #{task_name}"
+		#puts "treatment = #{treatment}"
+		#puts "patient_concerned = #{@@patient_concerned}"
 		@@dbAccess.addTaskInstance(@vmid, @@patient_concerned, task_name, treatment)
 		updateFrame		
 	end
