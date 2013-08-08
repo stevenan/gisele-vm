@@ -1,0 +1,71 @@
+require 'tk'
+
+class PatientGui
+
+	def initialize(dbAccess)
+		@@dbAccess=dbAccess
+	end
+
+def troll
+	view_win=Proc.new{
+		new_window = TkToplevel.new{ title "Patient profiles"}
+	
+				TkLabel.new(new_window, "width"=>20) {
+				  text "Patient: "
+				  font TkFont.new('times 12 bold')
+				  grid('row'=>0, 'column'=>0)
+				}
+				TkLabel.new(new_window, "width"=>20) {
+				  text "Variables:"
+				  font TkFont.new('times 12 bold')
+				  grid('row'=>0, 'column'=>1)
+				}
+				TkLabel.new(new_window, "width"=>20) {
+				  text "  "
+				  font TkFont.new('times 12 bold')
+				  grid('row'=>0, 'column'=>2)
+				}
+				index=1
+				patient_array=@@dbAccess.getPatientArray
+				patient_array.each do |patientname|
+					TkLabel.new(new_window, "width"=>20, "borderwidth"=>5){
+						text patientname
+						compound 'center'
+						grid('row'=>index, 'column'=>0)
+					}
+					String s=""
+					@@dbAccess.getPatientVariables(patientname).each do |var, val|
+						s+=var+" = "+val+"\n"
+					end
+					if s==""
+						s+="No Variable for that patient"
+					end
+					TkLabel.new(new_window, "width"=>20, "borderwidth"=>5){
+						text s
+						compound 'center'
+						justify 'left'
+						grid('row'=>index, 'column'=>1)
+					}
+					TkButton.new(new_window) do
+						command{new_window.destroy}
+						text "Update profile"
+						state "normal"
+						cursor "watch"
+						font TkFont.new('times 12')
+						grid('row'=>index,'column'=>2)
+					end
+					index+=1
+				end
+
+				TkButton.new(new_window) do
+					command{new_window.destroy}
+					text "Validate"
+					state "normal"
+					cursor "watch"
+					font TkFont.new('times 12')
+					grid('row'=>index,'column'=>1)
+				end
+	}
+end
+
+end

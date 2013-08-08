@@ -19,7 +19,6 @@ class Listener
     puts "SEEN: #{task_name}:#{type} (#{prog.puid} with parent #{prog.root})"
     
     if "#{type}"=="start" && prog.puid!=prog.root #new treatments are handled by the gui
-	#puts 'child'
 	@gui.createTaskInstance(prog.puid, task_name)
     end
     
@@ -30,7 +29,12 @@ class Listener
     
     #Else if a task is ended
     elsif "#{type}"=="end"
-	#@gui.updateFrame
+	if prog.puid==prog.root
+		puts "T is over"
+		@gui.endTreatment
+	end
+	@gui.updateFrame
+=begin
         @start_array.delete("#{prog.puid}") #Delete the id of the task in the started task array
         @end_array.push("#{prog.puid}") #Add it to the ended task array
         time_needed=Time.now-@start_time["#{prog.puid}"] #Compute the time needed to do the tasks
@@ -45,11 +49,10 @@ class Listener
         @task_end_time["#{task_name}"].each{|e| sum_variance+=(e-mean)**2}
         variance=sum_variance/size #Compute variance
         puts "Variance is equal to #{variance}"
+=end
     end
-    puts "Tasks started but not ended yet : "
-    puts @start_array.inspect
-    puts "Tasks ended : "
-    puts @end_array.inspect
+    puts "Tasks started but not ended yet : #{@start_array.inspect}"
+    puts "Tasks ended : #{@end_array.inspect}"
   end
   
 end

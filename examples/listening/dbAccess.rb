@@ -11,7 +11,7 @@ class DBAccess
 		@taskinstance_set = @DB[:taskinstance]
 		@patient_set = @DB[:patient]
 		@treatment_set = @DB[:treatment]
-		@fluent_set = @DB[:fluent]
+		@variable_set = @DB[:variable]
 	end
 
 	def updatetasktime(id, column)
@@ -38,20 +38,20 @@ class DBAccess
 		@patient_set.insert(:name => name, :treatmentname => '', :treatmentdate => '')
 	end
 
-	def updatePatient(name, treatment)
-		@patient_set.where(:name => name).update(:treatmentname => treatment, :treatmentdate => Date.today.to_s)
+	def updatePatient(name, treatment, date)
+		@patient_set.where(:name => name).update(:treatmentname => treatment, :treatmentdate => date)
 	end
 
-	def addFluent(patient, fluent, value)
-		@fluent_set.insert(:fluentname => fluent, :patientname => patient, :value=>value)
+	def addVariable(patient, variable, value)
+		@variable_set.insert(:variablename => variable, :patientname => patient, :value=>value)
 	end
 	
-	def updateFluent(patient, fluent, value)
-		@fluent_set.where(:fluentname => fluent, :patientname => patient).update(:value=>value)
+	def updateVariable(patient, variable, value)
+		@variable_set.where(:variablename => variable, :patientname => patient).update(:value=>value)
 	end
 	
-	def getPatientFluents(name)
-		patient_info = @fluent_set.where(:patientname => name).to_hash(:fluentname, :value)
+	def getPatientVariables(name)
+		patient_info = @variable_set.where(:patientname => name).to_hash(:variablename, :value)
 	end
 
 	def getPatientTreatment(name)
@@ -69,6 +69,11 @@ class DBAccess
 	def isStarted(id)		
 		t = @taskinstance_set.where(:vmid=>id, :starttime=>"").select_map(:taskname)
 		not t.length==0
+	end
+
+	def getCondition(task, treatment)
+		p=@taskinfo_set.where(:taskname => task, :treatmentname => treatment).select_map(:condition)
+		p[0]
 	end
 
 	def getTime(task, treatment)

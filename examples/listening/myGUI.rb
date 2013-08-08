@@ -23,29 +23,10 @@ class MyGUI
 			
 		#Column of the main window
 		
-		br = ["Patient name", "Treatment", "Current task", "Warning", "Buttons"].collect {|c|
+		br = ["Patient name", "Treatment", "Current task", "Conditions", "Buttons"].collect {|c|
 		  	TkLabel.new(@frame1, "text"=>c, "borderwidth"=>5, "relief"=>"ridge", "width"=>20)
 		}
 		TkGrid.grid(br[0], br[1], br[2], br[3], br[4])
-
-
-		#Lines to separate data
-		s0 = Tk::Tile::Separator.new(@root) do
-		   orient 'vertical'
-		   place('height' => 180, 'x' => 172, 'y' => 30)
-		end
-		s1 = Tk::Tile::Separator.new(@root) do
-		   orient 'vertical'
-		   place('height' => 180, 'x' => 344, 'y' => 30)
-		end
-		s2 = Tk::Tile::Separator.new(@root) do
-		   orient 'vertical'
-		   place('height' => 180, 'x' => 516, 'y' => 30)
-		end
-		s3 = Tk::Tile::Separator.new(@root) do
-		   orient 'vertical'
-		   place('height' => 180, 'x' => 688, 'y' => 30)
-		end
 
 
 		#window generated from menu
@@ -112,7 +93,7 @@ class MyGUI
 				text "Validate"
 				command {
 					if (not (plist.curselection()).empty?) && (not (tlist.curselection()).empty?)
-						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]))
+						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]),Date.today.to_s)
 						@@patient_concerned=plist.get(plist.curselection()[0])
 						vm.start(:main, [ tlist.get(tlist.curselection()[0]).strip.to_sym])
 						new_window.destroy
@@ -140,32 +121,8 @@ class MyGUI
 			t0=TkEntry.new(new_window) {
 			  grid('row'=>0, 'column'=>1)
 			}
-		
-			TkButton.new(new_window) do
-				command {
-
-					v1 = TkVariable.new
-					v2 = TkVariable.new
-					t1=TkEntry.new(new_window) {
-					  grid('row'=>counter, 'column'=>0)
-					}
-					t1.textvariable=v1
-					v1.value="variable name"
-					t2=TkEntry.new(new_window) {
-					  grid('row'=>counter, 'column'=>1)
-					}
-					t2.textvariable=v2
-					v2.value="value"
-					entry_map.push([t1,t2])
-					counter+=1
-				}
-				text "Add variable"
-				state "normal"
-				cursor "watch"
-				font TkFont.new('times 12')
-				grid('row'=>30, 'column'=>0)
-			end
-			TkButton.new(new_window) do
+			
+			val_button=TkButton.new(new_window) do
 				command{if t0.value==""
 						box= TkToplevel.new{ title "No name specified ! "}
 						TkLabel.new(box) {
@@ -186,8 +143,8 @@ class MyGUI
 						
 					else
 						@@dbAccess.addPatient(t0.value)
-						entry_map.each  do |fluentname,value|
-							@@dbAccess.addFluent(t0.value, fluentname.value, value.value)
+						entry_map.each  do |variablename,value|
+							@@dbAccess.addVariable(t0.value, variablename.value, value.value)
 						end
 						new_window.destroy
 					end
@@ -196,14 +153,38 @@ class MyGUI
 				state "normal"
 				cursor "watch"
 				font TkFont.new('times 12')
-				grid('row'=>30, 'column'=>1)
+				grid('row'=>counter, 'column'=>1)
+			end
+			add_button=TkButton.new(new_window) do
+				command {
+
+					v1 = TkVariable.new("variable name")
+					v2 = TkVariable.new("value")
+					t1=TkEntry.new(new_window) {
+					  textvariable v1
+					  grid('row'=>counter, 'column'=>0)
+					}
+					t2=TkEntry.new(new_window) {
+					  textvariable v2
+					  grid('row'=>counter, 'column'=>1)
+					}
+					entry_map.push([t1,t2])
+					counter+=1
+					add_button.grid('row'=>counter, 'column'=>0)
+					val_button.grid('row'=>counter, 'column'=>1)
+				}
+				text "Add variable"
+				state "normal"
+				cursor "watch"
+				font TkFont.new('times 12')
+				grid('row'=>counter, 'column'=>0)
 			end
 
 		}
 		###########
 
-		################# view Patient window
-		view_win=Proc.new{
+		################# view Patients window
+		viewp_win=Proc.new{
 		  	new_window = TkToplevel.new{ title "Patient profiles"}
 	
 			TkLabel.new(new_window, "width"=>20) {
@@ -216,6 +197,11 @@ class MyGUI
 			  font TkFont.new('times 12 bold')
 			  grid('row'=>0, 'column'=>1)
 			}
+			TkLabel.new(new_window, "width"=>20) {
+			  text "  "
+			  font TkFont.new('times 12 bold')
+			  grid('row'=>0, 'column'=>2)
+			}
 			index=1
 			patient_array=@@dbAccess.getPatientArray
 			patient_array.each do |patientname|
@@ -225,8 +211,12 @@ class MyGUI
 					grid('row'=>index, 'column'=>0)
 				}
 				String s=""
-				@@dbAccess.getPatientFluents(patientname).each do |var, val|
+				patient_var=@@dbAccess.getPatientVariables(patientname)
+				patient_var.each do |var, val|
 					s+=var+" = "+val+"\n"
+				end
+				if s==""
+					s+="No Variable for that patient"
 				end
 				TkLabel.new(new_window, "width"=>20, "borderwidth"=>5){
 					text s
@@ -234,6 +224,79 @@ class MyGUI
 					justify 'left'
 					grid('row'=>index, 'column'=>1)
 				}
+				TkButton.new(new_window) do
+					command{
+						new_window.destroy
+						update_window=TkToplevel.new{ title "Update profile of #{patientname} !"}
+						TkLabel.new(update_window, "width"=>20) {
+						  text "Variables: "
+						  font TkFont.new('times 12 bold')
+						  grid('row'=>0, 'column'=>0)
+						}
+						TkLabel.new(update_window, "width"=>20) {
+						  text "Values:"
+						  font TkFont.new('times 12 bold')
+						  grid('row'=>0, 'column'=>1)
+						}
+						i=1
+						modified_array=Array.new
+						new_array=Array.new
+						patient_var.each do |var, val| 
+						var_label=TkLabel.new(update_window, "width"=>20, "borderwidth"=>5){
+								text var
+								grid('row'=>i, 'column'=>0)
+							}
+						v=TkVariable.new(val)
+						val_entry=TkEntry.new(update_window, "width"=>20) {
+								textvariable v
+					  			grid('row'=>i, 'column'=>1)
+							}
+							modified_array.push([var, val, val_entry])
+							i+=1
+						end
+						val_button=TkButton.new(update_window){
+							command{
+								modified_array.each do |var_name, old_value, value_widget|
+									if value_widget.value!=old_value
+										@@dbAccess.updateVariable(patientname, var_name, value_widget.value)
+									end
+								end
+								new_array.each do |var_widget, val_widget|
+									@@dbAccess.addVariable(patientname, var_widget.value, val_widget.value)
+								end
+								update_window.destroy
+							}
+							text "Validate"
+							grid('row'=>i,'column'=>1)
+						}
+						add_button=TkButton.new(update_window){
+							command {
+								v1 = TkVariable.new("variable name")
+								v2 = TkVariable.new("value")
+								var_entry=TkEntry.new(update_window) {
+								  textvariable v1
+								  grid('row'=>i, 'column'=>0)
+								}
+								val_entry=TkEntry.new(update_window) {
+								  textvariable v2
+								  grid('row'=>i, 'column'=>1)
+								}
+								new_array.push([var_entry, val_entry])
+								i+=1
+								add_button.grid('row'=>i,'column'=>0)
+								val_button.grid('row'=>i,'column'=>1)
+							}
+							text "Add variable"
+							grid('row'=>i,'column'=>0)
+						}
+											
+					}
+					text "Update profile"
+					state "normal"
+					cursor "watch"
+					font TkFont.new('times 12')
+					grid('row'=>index,'column'=>2)
+				end
 				index+=1
 			end
 
@@ -243,33 +306,32 @@ class MyGUI
 				state "normal"
 				cursor "watch"
 				font TkFont.new('times 12')
-				grid('row'=>index,'columnspan'=>2)
+				grid('row'=>index,'column'=>1)
 			end
 		}
 		###########
-
-		stopall=Proc.new{vm.stop}
 
 		#menu
 		menu = TkMenu.new(@root)
 
 		menu.add('command',
 			      'label'     => "New treatment",
-			      'command'   => newt_win,
-			      'underline' => 4)
+			      'command'   => newt_win)
 		menu.add('command',
-			      'label'     => "New patient profile",
-			      'command'   => newp_win,
-			      'underline' => 4)
+			      'label'     => "New patient",
+			      'command'   => newp_win)
 		menu.add('command',
-			      'label'     => "View patient profile",
-			      'command'   => view_win,
-			      'underline' => 2)
+			      'label'     => "View patients profile",
+			      'command'   => viewp_win
+				)
+		menu.add('command',
+			      'label'     => "Tasks info",
+			      #'command'   => view_win
+			)
 		menu.add('separator')
 		menu.add('command',
 			      'label'     => "Exit",
-			      'command' => stopall,
-			      'underline' => 0)
+			      'command' => Proc.new{vm.stop})
 
 		menu_bar = TkMenu.new
 		menu_bar.add('cascade',
@@ -293,25 +355,27 @@ class MyGUI
 			else
 				tlabel="stop"
 			end
-			p=TkLabel.new(@frame2, "text"=>patient, "borderwidth"=>5, "width"=>20, "background"=>color)
-			t=TkLabel.new(@frame2, "text"=>treatment, "borderwidth"=>5, "width"=>20, "background"=>color)
-			ta=TkLabel.new(@frame2, "text"=>task, "borderwidth"=>5, "width"=>20, "background"=>color)
-			w=TkLabel.new(@frame2, "text"=>"", "borderwidth"=>5, "width"=>20, "background"=>color)
+			conditions=@@dbAccess.getCondition(task,treatment)
+			conditions_s=""
+			if conditions!=""
+				conditions.split(",").each {|e| conditions_s+=e.lstrip+"\n"}
+			end
+			p=TkLabel.new(@frame2, "text"=>patient, "borderwidth"=>5, "width"=>20)
+			t=TkLabel.new(@frame2, "text"=>treatment, "borderwidth"=>5, "width"=>20)
+			ta=TkLabel.new(@frame2, "text"=>task, "borderwidth"=>5, "width"=>20)
+			w=TkLabel.new(@frame2, "text"=>conditions_s, "borderwidth"=>5, "width"=>20)
 			b=TkButton.new() do
 				text tlabel
 				state "normal"
 				cursor "watch"
 				font TkFont.new('times 12')
-				background color
-				width 7
+				width 20
 				command {
 					 if tlabel=="start"
-						puts "start #{vmid}"
 						@@dbAccess.updatetasktime(vmid, :starttime)
 						tlabel="stop"
 						b.text(tlabel)
 					 else
-						puts "stop #{vmid}"
 						@@dbAccess.updatetasktime(vmid, :endtime)
 						@@patient_concerned=patient
 						@@vm.resume(vmid,[:ended])
@@ -319,27 +383,7 @@ class MyGUI
 				}
 			end
 
-			b1=TkButton.new() do
-				text "info"
-				state "normal"
-				cursor "watch"
-				font TkFont.new('times 12')
-				background color
-				width 7
-				command{
-					times=@@dbAccess.getTime(task, treatment)
-					box= TkToplevel.new{ title "Task informations !"}
-					s="Task #{task} from treatment #{treatment} \n"
-					s+="Mean time = #{times[0]} \n"
-					s+="Variance = #{times[1]}"
-					TkLabel.new(box) {
-						text s
-						grid('row'=>0, 'column'=>0)
-					}
-				}
-			end
-
-			TkGrid.grid(p,t,ta,w,b,b1)
+			TkGrid.grid(p,t,ta,w,b)
 
 			bool=!bool
 		}
@@ -350,12 +394,12 @@ class MyGUI
 	def createTaskInstance(id, task_name)
 		@vmid=id
 		treatment=@@dbAccess.getPatientTreatment(@@patient_concerned)
-		#puts "id = #{id}"
-		#puts "task = #{task_name}"
-		#puts "treatment = #{treatment}"
-		#puts "patient_concerned = #{@@patient_concerned}"
 		@@dbAccess.addTaskInstance(@vmid, @@patient_concerned, task_name, treatment)
 		updateFrame		
+	end
+	
+	def endTreatment
+		@@dbAccess.updatePatient(@@patient_concerned,"","")
 	end
 
 end
