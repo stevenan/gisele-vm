@@ -51,8 +51,10 @@ class Listener
         puts "Variance is equal to #{variance}"
 =end
     end
+=begin
     puts "Tasks started but not ended yet : #{@start_array.inspect}"
     puts "Tasks ended : #{@end_array.inspect}"
+=end
   end
   
 end

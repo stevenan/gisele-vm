@@ -10,13 +10,14 @@ class InitDB
 		  primary_key String :name
 		  String :treatmentname
 		  String :treatmentdate
+		  Int :treatmentcounter
 		end
 	end
 	#insert a patient example
 	patient_set = DB[:patient]
 	patient_set.delete
-	patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '')
-	patient_set.insert(:name => 'Pierre', :treatmentname => '', :treatmentdate => '')
+	patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
+	patient_set.insert(:name => 'Pierre', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
 
 	### Create variable table if it doesn't exist
 	if not DB.table_exists?(:variable)
@@ -37,12 +38,13 @@ class InitDB
 		  primary_key String :name
 		  String :description
 		  String :starttask
+		  Int :counter
 		end
 	end
 	#insert a treatment example
 	treatment_set = DB[:treatment]
 	treatment_set.delete
-	treatment_set.insert(:name => 'Treatment', :description => 'An example of treatment', :starttask => 'Consultation')
+	treatment_set.insert(:name => 'Treatment', :description => 'An example of treatment', :starttask => 'Consultation', :counter=>0)
 
 
         ### Create task info instance table if it doesn't exist
@@ -74,6 +76,7 @@ class InitDB
 		  String :patientname
 		  Time :starttime
 		  Time :endtime
+		  String :conditionfailure
 		end
 	end
 	#insert a task info examples

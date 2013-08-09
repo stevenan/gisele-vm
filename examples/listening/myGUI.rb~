@@ -24,7 +24,7 @@ class MyGUI
 		#Column of the main window
 		
 		br = ["Patient name", "Treatment", "Current task", "Conditions", "Buttons"].collect {|c|
-		  	TkLabel.new(@frame1, "text"=>c, "borderwidth"=>5, "relief"=>"ridge", "width"=>20)
+		  	TkLabel.new(@frame1, "text"=>c, "borderwidth"=>5, "relief"=>"ridge", "width"=>20, 'font'=> TkFont.new('times 12 bold'))
 		}
 		TkGrid.grid(br[0], br[1], br[2], br[3], br[4])
 
@@ -47,11 +47,17 @@ class MyGUI
 			TkLabel.new(new_window) {
 			  text "Treatment"
 			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 20
 			  grid('row'=>0, 'column'=>0)
 			}
 			TkLabel.new(new_window) {
 			  text "Patient"
-			    font TkFont.new('times 12 bold')
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 20
 			  grid('row'=>0, 'column'=>1)
 			}
 
@@ -93,7 +99,7 @@ class MyGUI
 				text "Validate"
 				command {
 					if (not (plist.curselection()).empty?) && (not (tlist.curselection()).empty?)
-						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]),Date.today.to_s)
+						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]),Date.today.to_s,0)
 						@@patient_concerned=plist.get(plist.curselection()[0])
 						vm.start(:main, [ tlist.get(tlist.curselection()[0]).strip.to_sym])
 						new_window.destroy
@@ -115,10 +121,12 @@ class MyGUI
 			entry_map=Array.new
 			TkLabel.new(new_window) {
 			  text "Name"
-			  font TkFont.new('times 12')
+			  width 20
+			  font TkFont.new('times 12 bold')
 			  grid('row'=>0, 'column'=>0)
 			}
 			t0=TkEntry.new(new_window) {
+			  width 20
 			  grid('row'=>0, 'column'=>1)
 			}
 			
@@ -162,10 +170,12 @@ class MyGUI
 					v2 = TkVariable.new("value")
 					t1=TkEntry.new(new_window) {
 					  textvariable v1
+					  width 20
 					  grid('row'=>counter, 'column'=>0)
 					}
 					t2=TkEntry.new(new_window) {
 					  textvariable v2
+					  width 20
 					  grid('row'=>counter, 'column'=>1)
 					}
 					entry_map.push([t1,t2])
@@ -190,17 +200,42 @@ class MyGUI
 			TkLabel.new(new_window, "width"=>20) {
 			  text "Patient: "
 			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 20
 			  grid('row'=>0, 'column'=>0)
+			}
+			TkLabel.new(new_window, "width"=>20) {
+			  text "Number of treatments:"
+			  font TkFont.new('times 12 bold')
+                          relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>1)
+			}
+			TkLabel.new(new_window, "width"=>20) {
+			  text "Total duration:"
+			  font TkFont.new('times 12 bold')
+                          relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>2)
 			}
 			TkLabel.new(new_window, "width"=>20) {
 			  text "Variables:"
 			  font TkFont.new('times 12 bold')
-			  grid('row'=>0, 'column'=>1)
+                          relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>3)
 			}
 			TkLabel.new(new_window, "width"=>20) {
 			  text "  "
 			  font TkFont.new('times 12 bold')
-			  grid('row'=>0, 'column'=>2)
+                          
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>4)
 			}
 			index=1
 			patient_array=@@dbAccess.getPatientArray
@@ -209,6 +244,19 @@ class MyGUI
 					text patientname
 					compound 'center'
 					grid('row'=>index, 'column'=>0)
+				}
+				c=@@dbAccess.getPatientTreatmentCounter(patientname)
+				TkLabel.new(new_window, "width"=>20, "borderwidth"=>5){
+					text c
+					compound 'center'
+					grid('row'=>index, 'column'=>1)
+				}
+				duration=@@dbAccess.getPatientDuration(patientname)
+				duration_s=duration.to_s+" sec"
+				TkLabel.new(new_window, "width"=>20, "borderwidth"=>5){
+					text duration_s
+					compound 'center'
+					grid('row'=>index, 'column'=>2)
 				}
 				String s=""
 				patient_var=@@dbAccess.getPatientVariables(patientname)
@@ -222,7 +270,7 @@ class MyGUI
 					text s
 					compound 'center'
 					justify 'left'
-					grid('row'=>index, 'column'=>1)
+					grid('row'=>index, 'column'=>3)
 				}
 				TkButton.new(new_window) do
 					command{
@@ -295,7 +343,7 @@ class MyGUI
 					state "normal"
 					cursor "watch"
 					font TkFont.new('times 12')
-					grid('row'=>index,'column'=>2)
+					grid('row'=>index,'column'=>4)
 				end
 				index+=1
 			end
@@ -308,6 +356,231 @@ class MyGUI
 				font TkFont.new('times 12')
 				grid('row'=>index,'column'=>1)
 			end
+		}
+		###########
+
+		################# view stats window
+		viewt_win=Proc.new{
+		  	new_window = TkToplevel.new{ title "Treatments and tasks stats"}
+
+			TkLabel.new(new_window) {
+			  text "Treatment: "
+			  font TkFont.new('times 12 bold')
+                          relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>0)
+			}
+			TkLabel.new(new_window) {
+			  text "In progress:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 12
+			  grid('row'=>0, 'column'=>1)
+			}
+			TkLabel.new(new_window) {
+			  text "Finished:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 10
+			  grid('row'=>0, 'column'=>2)
+			}
+			TkLabel.new(new_window) {
+			  text "Treatment %:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 14
+			  grid('row'=>0, 'column'=>3)
+			}
+			TkLabel.new(new_window) {
+			  text "Mean time:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>4)
+			}
+			TkLabel.new(new_window) {
+			  text "Tasks:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>5)
+			}
+			TkLabel.new(new_window) {
+			  text "Mean time:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>6)
+			}
+			TkLabel.new(new_window) {
+			  text "Variance:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>7)
+			}
+			TkLabel.new(new_window) {
+			  text "Finished:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 10
+			  grid('row'=>0, 'column'=>8)
+			}
+			TkLabel.new(new_window) {
+			  text "Success %:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 10
+			  grid('row'=>0, 'column'=>9)
+			}
+			TkLabel.new(new_window) {
+			  text "Worst condition:"
+			  font TkFont.new('times 12 bold')
+			  relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>10)
+			}
+			row=1
+
+			total_finished=0
+			treatment_name_array=@@dbAccess.getTreatmentArray
+			treatment_name_array.each{ |name|
+				total_finished+=@@dbAccess.getTreatmentCounter(name)
+			}
+			
+			treatment_name_array.each{ |treatment|
+
+				TkLabel.new(new_window) {
+				text treatment
+				font TkFont.new('times 12')
+				width 20
+				grid('row'=>row, 'column'=>0)
+				}
+
+				number_in_progress=@@dbAccess.getTreatmentInProgress(treatment)
+				TkLabel.new(new_window) {
+				text number_in_progress.to_s
+				font TkFont.new('times 12')
+				width 12
+				grid('row'=>row, 'column'=>1)
+				}
+
+				number_finished=@@dbAccess.getTreatmentCounter(treatment)
+				TkLabel.new(new_window) {
+				text number_finished.to_s
+				font TkFont.new('times 12')
+				width 10
+				grid('row'=>row, 'column'=>2)
+				}
+				
+				if total_finished>0
+					percentage_finished=(number_finished*100/total_finished).round(2)
+				else
+					percentage_finished=0
+				end
+				TkLabel.new(new_window) {
+				text percentage_finished.to_s+" %"
+				font TkFont.new('times 12')
+				width 14
+				grid('row'=>row, 'column'=>3)
+				}
+
+				duration=@@dbAccess.getTreatmentDuration(treatment)
+				mean=(duration/number_finished).round(2)
+				TkLabel.new(new_window) {
+				text mean.to_s+" s"
+				font TkFont.new('times 12')
+				width 20
+				grid('row'=>row, 'column'=>4)
+				}
+				
+				tasks_array=@@dbAccess.getTasksFromTreatment(treatment)
+				name_s=""
+				mean_s=""
+				variance_s=""
+				finished_s=""
+				success_s=""
+				conditions_s=""
+				tasks_array.each{ |task|
+					name_s+=task+"\n"
+					
+					stats=@@dbAccess.getTaskStats(task, treatment)
+					mean_s+=stats[0].to_s+" sec \n"
+					variance_s+=stats[1].to_s+" \n"
+
+					task_finished=@@dbAccess.getTaskFinishedNumber(task, treatment)
+					finished_s+=task_finished.to_s+" \n"
+
+					success_percentage=@@dbAccess.getSuccessPercentage(task, treatment)
+					success_s+=success_percentage.to_s+" \n"
+
+					condition_f=@@dbAccess.getMostConditionFailure(task, treatment)
+					#conditions_s+=condition_f.to_s+" \n"
+				}
+								
+				TkLabel.new(new_window) {
+				text name_s
+				font TkFont.new('times 12')
+				width 20
+				grid('row'=>row, 'column'=>5)
+				}
+				
+				
+				TkLabel.new(new_window) {
+				text mean_s
+				font TkFont.new('times 12')
+				width 20
+				grid('row'=>row, 'column'=>6)
+				}
+				TkLabel.new(new_window) {
+				text variance_s
+				font TkFont.new('times 12')
+				width 20
+				grid('row'=>row, 'column'=>7)
+				}
+
+				
+				TkLabel.new(new_window) {
+				text finished_s
+				font TkFont.new('times 12')
+				width 10
+				grid('row'=>row, 'column'=>8)
+				}
+
+				
+				TkLabel.new(new_window) {
+				text success_s
+				font TkFont.new('times 12')
+				width 10
+				grid('row'=>row, 'column'=>9)
+				}
+
+				
+				TkLabel.new(new_window) {
+				text conditions_s
+				font TkFont.new('times 12')
+				width 20
+				grid('row'=>row, 'column'=>10)
+				}
+
+				
+				
+				
+			row+=1
+			}
+
+		
 		}
 		###########
 
@@ -326,7 +599,7 @@ class MyGUI
 				)
 		menu.add('command',
 			      'label'     => "Tasks info",
-			      #'command'   => view_win
+			      'command'   => viewt_win
 			)
 		menu.add('separator')
 		menu.add('command',
@@ -369,7 +642,7 @@ class MyGUI
 				state "normal"
 				cursor "watch"
 				font TkFont.new('times 12')
-				width 20
+				width 15
 				command {
 					 if tlabel=="start"
 						@@dbAccess.updatetasktime(vmid, :starttime)
@@ -399,7 +672,9 @@ class MyGUI
 	end
 	
 	def endTreatment
-		@@dbAccess.updatePatient(@@patient_concerned,"","")
+		treatment=@@dbAccess.getPatientTreatment(@@patient_concerned)
+		@@dbAccess.incrementTreatmentCounter(treatment)
+		@@dbAccess.updatePatient(@@patient_concerned,"","",1)
 	end
 
 end
