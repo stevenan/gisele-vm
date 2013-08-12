@@ -152,7 +152,9 @@ class MyGUI
 					else
 						@@dbAccess.addPatient(t0.value)
 						entry_map.each  do |variablename,value|
-							@@dbAccess.addVariable(t0.value, variablename.value, value.value)
+							if (not @@dbAccess.hasVariable(t0.value, variablename.value)) and (variablename.value != "variable name" and value.value != "value")
+								@@dbAccess.addVariable(t0.value, variablename.value, value.value)
+							end
 						end
 						new_window.destroy
 					end
@@ -310,7 +312,9 @@ class MyGUI
 									end
 								end
 								new_array.each do |var_widget, val_widget|
-									@@dbAccess.addVariable(patientname, var_widget.value, val_widget.value)
+									if (not @@dbAccess.hasVariable(patientname, var_widget.value)) and (var_widget.value != "variable name" and val_widget.value != "value")
+										@@dbAccess.addVariable(patientname, var_widget.value, val_widget.value)
+									end
 								end
 								update_window.destroy
 							}
@@ -346,15 +350,6 @@ class MyGUI
 					grid('row'=>index,'column'=>4)
 				end
 				index+=1
-			end
-
-			TkButton.new(new_window) do
-				command{new_window.destroy}
-				text "Validate"
-				state "normal"
-				cursor "watch"
-				font TkFont.new('times 12')
-				grid('row'=>index,'column'=>1)
 			end
 		}
 		###########
@@ -497,7 +492,11 @@ class MyGUI
 				}
 
 				duration=@@dbAccess.getTreatmentDuration(treatment)
-				mean=(duration/number_finished).round(2)
+				if number_finished>0
+					mean=(duration/number_finished).round(2)
+				else
+					mean=0
+				end
 				TkLabel.new(new_window) {
 				text mean.to_s+" s"
 				font TkFont.new('times 12')

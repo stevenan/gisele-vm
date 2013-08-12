@@ -40,6 +40,12 @@ class DBAccess
 		@patient_set.where(:name => name).update(:treatmentname => treatment, :treatmentdate => date, :treatmentcounter=> c+increment)
 	end
 
+	def hasVariable(patient, variable)
+		c=@variable_set.where(:variablename => variable, :patientname => patient).count
+		puts c>0
+		c>0
+	end
+
 	def addVariable(patient, variable, value)
 		@variable_set.insert(:variablename => variable, :patientname => patient, :value=>value)
 	end
@@ -65,7 +71,7 @@ class DBAccess
 	end
 
 	def getTreatmentInProgress(treatment)
-		@patient_set.where(:treatmentname).count
+		@patient_set.where(:treatmentname=>treatment).count
 	end
 
 	def getTreatmentDuration(treatment)
