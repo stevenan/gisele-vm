@@ -42,6 +42,7 @@ class DBAccess
 
 	def hasVariable(patient, variable)
 		c=@variable_set.where(:variablename => variable, :patientname => patient).count
+		puts c>0
 		c>0
 	end
 
@@ -59,6 +60,10 @@ class DBAccess
 
 	def getPatientTreatment(name)
 		@patient_set.where(:name=>name).get(:treatmentname)
+	end
+
+	def getPatientTreatmentList(name)
+		@taskinstance_set.distinct.where(:patientname=>name).select_map([:treatmentname])
 	end
 
 	def getPatientTreatmentCounter(name)

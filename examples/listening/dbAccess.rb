@@ -62,6 +62,10 @@ class DBAccess
 		@patient_set.where(:name=>name).get(:treatmentname)
 	end
 
+	def getPatientTreatmentList(name)
+		@taskinstance_set.distinct.where(:patientname=>name).select_map(:treatmentname)
+	end
+
 	def getPatientTreatmentCounter(name)
 		@patient_set.where(:name=>name).get(:treatmentcounter)
 	end

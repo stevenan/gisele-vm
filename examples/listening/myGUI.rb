@@ -247,7 +247,15 @@ class MyGUI
 					compound 'center'
 					grid('row'=>index, 'column'=>0)
 				}
-				c=@@dbAccess.getPatientTreatmentCounter(patientname)
+				l=@@dbAccess.getPatientTreatmentList(patientname)
+				c="#{l.length} treatment(s) followed"
+				if l.length > 0
+					c+=":"
+					l.each do |e|
+						c+="\n #{e}"
+					end 
+				end
+				@@dbAccess.getPatientTreatmentList(patientname)
 				TkLabel.new(new_window, "width"=>20, "borderwidth"=>5){
 					text c
 					compound 'center'
