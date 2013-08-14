@@ -10,16 +10,15 @@ class InitDB
 		  primary_key String :name
 		  String :treatmentname
 		  String :treatmentdate
-		  Int :treatmentcounter
 		end
 	end
 	#insert a patient example
 	patient_set = DB[:patient]
 	patient_set.delete
-	patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
-	patient_set.insert(:name => 'Pierre', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
-	patient_set.insert(:name => 'Paul', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
-	patient_set.insert(:name => 'John', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
+	patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '')
+	patient_set.insert(:name => 'Pierre', :treatmentname => '', :treatmentdate => '')
+	patient_set.insert(:name => 'Paul', :treatmentname => '', :treatmentdate => '')
+	patient_set.insert(:name => 'John', :treatmentname => '', :treatmentdate => '')
 
 	### Create variable table if it doesn't exist
 	if not DB.table_exists?(:variable)

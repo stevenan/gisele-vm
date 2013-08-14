@@ -99,7 +99,7 @@ class MyGUI
 				text "Validate"
 				command {
 					if (not (plist.curselection()).empty?) && (not (tlist.curselection()).empty?)
-						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]),Date.today.to_s,0)
+						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]),Date.today.to_s)
 						@@patient_concerned=plist.get(plist.curselection()[0])
 						vm.start(:main, [ tlist.get(tlist.curselection()[0]).strip.to_sym])
 						new_window.destroy
@@ -248,7 +248,13 @@ class MyGUI
 					grid('row'=>index, 'column'=>0)
 				}
 				l=@@dbAccess.getPatientTreatmentList(patientname)
-				c="#{l.length}"
+				c="#{l.length} treatment(s) followed"
+				if l.length > 0
+					c+=":"
+					l.each do |e|
+						c+="\n #{e}"
+					end 
+				end
 				@@dbAccess.getPatientTreatmentList(patientname)
 				TkLabel.new(new_window, "width"=>20, "borderwidth"=>5){
 					text c
@@ -675,7 +681,7 @@ class MyGUI
 	def endTreatment
 		treatment=@@dbAccess.getPatientTreatment(@@patient_concerned)
 		@@dbAccess.incrementTreatmentCounter(treatment)
-		@@dbAccess.updatePatient(@@patient_concerned,"","",1)
+		@@dbAccess.updatePatient(@@patient_concerned,"","")
 	end
 
 end

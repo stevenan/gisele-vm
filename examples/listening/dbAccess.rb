@@ -35,9 +35,8 @@ class DBAccess
 		@patient_set.insert(:name => name, :treatmentname => '', :treatmentdate => '')
 	end
 
-	def updatePatient(name, treatment, date, increment)
-		c=getPatientTreatmentCounter(name)
-		@patient_set.where(:name => name).update(:treatmentname => treatment, :treatmentdate => date, :treatmentcounter=> c+increment)
+	def updatePatient(name, treatment, date)
+		@patient_set.where(:name => name).update(:treatmentname => treatment, :treatmentdate => date)
 	end
 
 	def hasVariable(patient, variable)
@@ -66,9 +65,6 @@ class DBAccess
 		@taskinstance_set.distinct.where(:patientname=>name).select_map(:treatmentname)
 	end
 
-	def getPatientTreatmentCounter(name)
-		@patient_set.where(:name=>name).get(:treatmentcounter)
-	end
 
 	def getTreatmentCounter(treatment)
 		@treatment_set.where(:name=>treatment).get(:counter)

@@ -99,7 +99,7 @@ class MyGUI
 				text "Validate"
 				command {
 					if (not (plist.curselection()).empty?) && (not (tlist.curselection()).empty?)
-						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]),Date.today.to_s,0)
+						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]),Date.today.to_s)
 						@@patient_concerned=plist.get(plist.curselection()[0])
 						vm.start(:main, [ tlist.get(tlist.curselection()[0]).strip.to_sym])
 						new_window.destroy
@@ -681,7 +681,7 @@ class MyGUI
 	def endTreatment
 		treatment=@@dbAccess.getPatientTreatment(@@patient_concerned)
 		@@dbAccess.incrementTreatmentCounter(treatment)
-		@@dbAccess.updatePatient(@@patient_concerned,"","",1)
+		@@dbAccess.updatePatient(@@patient_concerned,"","")
 	end
 
 end

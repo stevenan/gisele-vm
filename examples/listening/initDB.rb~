@@ -16,10 +16,10 @@ class InitDB
 	#insert a patient example
 	patient_set = DB[:patient]
 	patient_set.delete
-	patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
-	patient_set.insert(:name => 'Pierre', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
-	patient_set.insert(:name => 'Paul', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
-	patient_set.insert(:name => 'John', :treatmentname => '', :treatmentdate => '', :treatmentcounter=>0)
+	patient_set.insert(:name => 'Jean', :treatmentname => '', :treatmentdate => '')
+	patient_set.insert(:name => 'Pierre', :treatmentname => '', :treatmentdate => '')
+	patient_set.insert(:name => 'Paul', :treatmentname => '', :treatmentdate => '')
+	patient_set.insert(:name => 'John', :treatmentname => '', :treatmentdate => '')
 
 	### Create variable table if it doesn't exist
 	if not DB.table_exists?(:variable)
@@ -66,7 +66,7 @@ class InitDB
 	#insert a task examples
 	taskinfo_set = DB[:taskinfo]
 	taskinfo_set.delete
-	taskinfo_set.insert(:taskname => 'Consultation', :treatmentname => 'Treatment', :condition => "age > 5, taille > 50", :place=>"", :decision => false)
+	taskinfo_set.insert(:taskname => 'Consultation', :treatmentname => 'Treatment', :condition => "Blood pressure > 9", :place=>"", :decision => false)
 	taskinfo_set.insert(:taskname => 'Endoscopy', :treatmentname => 'Treatment', :condition => "", :place=>"", :decision => false)
 	taskinfo_set.insert(:taskname => 'Chemotherapy', :treatmentname => 'Treatment', :condition => "", :place=>"", :decision => false)
 	taskinfo_set.insert(:taskname => 'Biopsy', :treatmentname => 'Treatment', :condition => "", :place=>"", :decision => false)
