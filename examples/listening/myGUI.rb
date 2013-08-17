@@ -139,6 +139,14 @@ class MyGUI
 							font TkFont.new('times 12')
 							grid('row'=>0, 'column'=>0)
 						}
+						TkButton.new(box) do
+							command {box.destroy}
+							text "ok"
+							state "normal"
+							cursor "watch"
+							font TkFont.new('times 12')
+							grid('row'=>1, 'column'=>0)
+						end
 					elsif
 						@@dbAccess.getPatientArray.include?(t0.value)
 						box= TkToplevel.new{ title "Patient name conflict ! "}
@@ -148,7 +156,14 @@ class MyGUI
 							font TkFont.new('times 12')
 							grid('row'=>0, 'column'=>0)
 						}
-						
+						TkButton.new(box) do
+							command {box.destroy}
+							text "ok"
+							state "normal"
+							cursor "watch"
+							font TkFont.new('times 12')
+							grid('row'=>1, 'column'=>0)
+						end						
 					else
 						@@dbAccess.addPatient(t0.value)
 						entry_map.each  do |variablename,value|
@@ -533,7 +548,7 @@ class MyGUI
 					success_s+=success_percentage.to_s+" \n"
 
 					condition_f=@@dbAccess.getMostConditionFailure(task, treatment)
-					#conditions_s+=condition_f.to_s+" \n"
+					conditions_s+=condition_f.to_s+" \n"
 				}
 								
 				TkLabel.new(new_window) {
@@ -653,11 +668,51 @@ class MyGUI
 				command {
 					 if tlabel=="start"
 						@@dbAccess.updatetasktime(vmid, :starttime)
+						@@dbAccess.checkCondition(vmid, task, treatment, patient)
 						tlabel="stop"
 						b.text(tlabel)
 					 else
 						@@dbAccess.updatetasktime(vmid, :endtime)
 						@@patient_concerned=patient
+						box= TkToplevel.new{ title "Task ended!"}
+						TkLabel.new(box) {
+							text "Time needed : "
+							font TkFont.new('times 12')
+							grid('row'=>0, 'column'=>0)
+						}
+						TkLabel.new(box) {
+							text @@dbAccess.getDuration(vmid)
+							font TkFont.new('times 12')
+							grid('row'=>0, 'column'=>1)
+						}
+						TkLabel.new(box) {
+							text "Mean time for this task : "
+							font TkFont.new('times 12')
+							grid('row'=>1, 'column'=>0)
+						}
+						TkLabel.new(box) {
+							text @@dbAccess.getMean(task, treatment)
+							font TkFont.new('times 12')
+							grid('row'=>1, 'column'=>1)
+						}
+						TkLabel.new(box) {
+							text "Not respected condition(s) : "
+							font TkFont.new('times 12')
+							grid('row'=>3, 'column'=>0)
+						}
+						TkLabel.new(box) {
+							text @@dbAccess.getConditionsFailure(vmid)
+							font TkFont.new('times 12')
+							grid('row'=>3, 'column'=>1)
+						}
+						TkButton.new(box) do
+							command {box.destroy}
+							text "ok"
+							state "normal"
+							cursor "watch"
+							font TkFont.new('times 12')
+							grid('row'=>4, 'column'=>0)
+						end
 						@@vm.resume(vmid,[:ended])
 					 end
 				}

@@ -41,7 +41,6 @@ class DBAccess
 
 	def hasVariable(patient, variable)
 		c=@variable_set.where(:variablename => variable, :patientname => patient).count
-		puts c>0
 		c>0
 	end
 
@@ -53,6 +52,10 @@ class DBAccess
 		@variable_set.where(:variablename => variable, :patientname => patient).update(:value=>value)
 	end
 	
+	def getValue(patient, variable)
+		@variable_set.where(:variablename => variable, :patientname => patient).get(:value)
+	end
+
 	def getPatientVariables(name)
 		patient_info = @variable_set.where(:patientname => name).to_hash(:variablename, :value)
 	end
@@ -95,6 +98,12 @@ class DBAccess
 		@taskinstance_set.insert(:vmid=>id, :taskname => task, :treatmentname => treatment, :patientname => patient, :starttime=>"", :endtime=>"")
 	end
 
+	def getDuration(vmid)
+		s=@taskinstance_set.where(:vmid=>vmid).get(:starttime)
+		e=@taskinstance_set.where(:vmid=>vmid).get(:endtime)
+		(e-s).round(2)
+	end
+
 	def isStarted(id)		
 		t = @taskinstance_set.where(:vmid=>id, :starttime=>"").select_map(:taskname)
 		not t.length==0
@@ -105,13 +114,30 @@ class DBAccess
 		p[0]
 	end
 	
+	def setConditionFailure(vmid, conditions)
+		@taskinstance_set.where(:vmid => vmid).update(:conditionfailure=>conditions)
+	end
+
 	def getPatientDuration(patient)
-		map=@taskinstance_set.exclude(:endtime=>"", :starttime=>"").where(:patientname=>patient).select_map([:starttime, :endtime])
+		map=@taskinstance_set.exclude(:starttime=>"").exclude(:endtime=>"").where(:patientname=>patient).select_map([:starttime, :endtime])
 		total=0
 		map.each{ |s,e|
 			total+=(e-s)
 		}
 		total.round(2)
+	end
+
+	def getMean(task, treatment)
+		times=@taskinstance_set.exclude(:endtime=>"").where(:taskname=>task, :treatmentname=>treatment).select_map([:starttime, :endtime])
+		duration=[]
+		times.each{|s,e| duration.push(e-s)}
+		total=0
+		mean=0
+		if (duration.length > 0)
+			duration.each{|t| total+=t}
+			mean=total/(duration.length)
+		end
+		mean.round(2)
 	end
 
 	def getTaskStats(task, treatment)
@@ -129,37 +155,41 @@ class DBAccess
 		[mean.round(2), variance.round(2)]
 	end
 
+	def getConditionsFailure(vmid)
+		@taskinstance_set.where(:vmid=>vmid).get(:conditionfailure)
+	end
+
 	def getTaskFinishedNumber(task, treatment)
 		@taskinstance_set.exclude(:endtime=>"").where(:taskname=>task, :treatmentname=>treatment).count
 	end
 
 	def getSuccessPercentage(task, treatment)
 		total=@taskinstance_set.exclude(:endtime=>"").where(:taskname=>task, :treatmentname=>treatment).count
-		failure=@taskinstance_set.exclude(:endtime=>"", :conditionfailure=>"").where(:taskname=>task, :treatmentname=>treatment).count
+		failure=@taskinstance_set.exclude(:endtime=>"").exclude(:conditionfailure=>"").where(:taskname=>task, :treatmentname=>treatment).count
 		percentage=0
 		if total>0
-			percentage=failure*100/total
+			percentage=100-(failure*100/total)
 		end
 		percentage.round(2)
 	end
 
 	def getMostConditionFailure(task, treatment)
 		counter_array=Hash.new
-		c=@taskinstance_set.exclude(:endtime=>"").or(:conditionfailure=>"")
+		c=@taskinstance_set.exclude(:endtime=>"").exclude(:conditionfailure=>"")
 		c1=c.where(:taskname=>task, :treatmentname=>treatment).select_map(:conditionfailure)
 		result=""
-
 		if c1.length!=0
-			c1.each{ |e| 
-
-				if counter_array.include?(e)
-					counter_array[e]+=1
-				else
-					counter_array[e]=1
-				end
+			c1.each{ |conditions| 
+				conditions.split("\n").each{ |e|
+					if counter_array.has_key?(e)
+						counter_array[e]+=1
+					else
+						counter_array[e]=1
+					end
+				}
 			}
 			most=counter_array.max_by{|k,v| v}
-			result=most[1]
+			result=most[0]
 
 		end
 
@@ -169,6 +199,82 @@ class DBAccess
 	def incrementTreatmentCounter(treatment)
 		c=@treatment_set.where(:name=>treatment).get(:counter)
 		@treatment_set.where(:name=>treatment).update(:counter=>c+1)
+	end
+
+	def checkCondition(vmid, task, treatment, patient)
+		vars=@variable_set.where(:patientname => patient).select_map([:variablename, :value])
+		conditions=getCondition(task, treatment)
+		failed_s=""
+		if conditions!=""
+			conditions.split(",").each {|c|
+				c_array=[]
+				if failed_s!=""
+					failed_s+="\n"
+				end
+				if c.include?("<=")
+					c_array=c.split("<=")
+					var=c_array[0].strip
+					val=c_array[1].strip
+					if hasVariable(patient, var)
+						current_val=getValue(patient, var)
+						if current_val.to_i>val.to_i
+							failed_s+=c
+						end
+					else
+						failed_s+=c	
+					end
+				elsif c.include?(">=")
+					c_array=c.split(">=")
+					var=c_array[0].strip
+					val=c_array[1].strip
+					if hasVariable(patient, var)
+						current_val=getValue(patient, var)
+						if current_val.to_i<val.to_i
+							failed_s+=c
+						end
+					else
+						failed_s+=c	
+					end
+				elsif c.include?("=")
+					c_array=c.split("=")
+					var=c_array[0].strip
+					val=c_array[1].strip
+					if hasVariable(patient, var)
+						current_val=getValue(patient, var)
+						if current_val.to_i!=val.to_i
+							failed_s+=c
+						end
+					else
+						failed_s+=c	
+					end
+				elsif c.include?("<")
+					c_array=c.split("<")
+					var=c_array[0].strip
+					val=c_array[1].strip
+					if hasVariable(patient, var)
+						current_val=getValue(patient, var)
+						if current_val.to_i>=val.to_i
+							failed_s+=c
+						end
+					else
+						failed_s+=c	
+					end
+				elsif c.include?(">")
+					c_array=c.split(">")
+					var=c_array[0].strip
+					val=c_array[1].strip
+					if hasVariable(patient, var)
+						current_val=getValue(patient, var)
+						if current_val.to_i<=val.to_i
+							failed_s+=c
+						end
+					else
+						failed_s+=c	
+					end
+				end
+			}
+		end 
+		setConditionFailure(vmid, failed_s)
 	end
 
 end
