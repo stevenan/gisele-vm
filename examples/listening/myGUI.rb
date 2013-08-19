@@ -100,6 +100,7 @@ class MyGUI
 				command {
 					if (not (plist.curselection()).empty?) && (not (tlist.curselection()).empty?)
 						@@dbAccess.updatePatient(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]),Date.today.to_s)
+						@@dbAccess.initPatientFluents(plist.get(plist.curselection()[0]), tlist.get(tlist.curselection()[0]))
 						@@patient_concerned=plist.get(plist.curselection()[0])
 						vm.start(:main, [ tlist.get(tlist.curselection()[0]).strip.to_sym])
 						new_window.destroy
@@ -674,6 +675,7 @@ class MyGUI
 					 else
 						@@dbAccess.updatetasktime(vmid, :endtime)
 						@@patient_concerned=patient
+						@@dbAccess.updateFluentsPatient(patient, task)
 						box= TkToplevel.new{ title "Task ended!"}
 						TkLabel.new(box) {
 							text "Time needed : "
@@ -705,13 +707,23 @@ class MyGUI
 							font TkFont.new('times 12')
 							grid('row'=>3, 'column'=>1)
 						}
+						TkLabel.new(box) {
+							text "fluents : "
+							font TkFont.new('times 12')
+							grid('row'=>4, 'column'=>0)
+						}
+						TkLabel.new(box) {
+							text @@dbAccess.getPatientFluents(patient)
+							font TkFont.new('times 12')
+							grid('row'=>4, 'column'=>1)
+						}
 						TkButton.new(box) do
 							command {box.destroy}
 							text "ok"
 							state "normal"
 							cursor "watch"
 							font TkFont.new('times 12')
-							grid('row'=>4, 'column'=>0)
+							grid('row'=>5, 'column'=>0)
 						end
 						@@vm.resume(vmid,[:ended])
 					 end
@@ -736,6 +748,7 @@ class MyGUI
 	def endTreatment
 		treatment=@@dbAccess.getPatientTreatment(@@patient_concerned)
 		@@dbAccess.incrementTreatmentCounter(treatment)
+		@@dbAccess.deletePatientFluents(@@patient_concerned)
 		@@dbAccess.updatePatient(@@patient_concerned,"","")
 	end
 

@@ -45,16 +45,17 @@ class InitDB
 		  primary_key String :name
 		  String :description
 		  String :starttask
+		  String :fluents
 		  Int :counter
 		end
 	end
 	#insert a treatment example
 	treatment_set = DB[:treatment]
 	treatment_set.delete
-	treatment_set.insert(:name => 'Treatment', :description => 'An example of treatment', :starttask => 'Consultation', :counter=>0)
+	treatment_set.insert(:name => 'Treatment', :description => 'An example of treatment', :starttask => 'Consultation', :fluents=>'consultation_f, endoscopy_f, biopsy_f, chemotherapy_f, surgery_f', :counter=>0)
 
 
-        ### Create task info instance table if it doesn't exist
+        ### Create task info table if it doesn't exist
 	if not DB.table_exists?(:taskinfo)
 		DB.create_table :taskinfo do
 		  String :taskname
@@ -92,5 +93,35 @@ class InitDB
 	#taskinstance_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :patientname => "Paul", :starttime => "", :endtime => "")
 	#taskinstance_set.insert(:taskname => 'Surgery', :treatmentname => 'Treatment', :patientname => "Joe", :starttime => "", :endtime => "2")
 
+
+	### Create fluent info table if it doesn't exist
+	if not DB.table_exists?(:fluentinfo)
+		DB.create_table :fluentinfo do
+		  String :fluentname
+		  Boolean :initialvalue
+		  String :initiatingevent
+		  String :endingevent
+		end
+	end
+	#insert a fluent info examples
+	fluentinfo_set = DB[:fluentinfo]
+	fluentinfo_set.delete
+	fluentinfo_set.insert(:fluentname=>'consultation_f', :initialvalue=>false, :initiatingevent=>'Consultation', :endingevent=>'Surgery')
+	fluentinfo_set.insert(:fluentname=>'endoscopy_f', :initialvalue=>false, :initiatingevent=>'Endoscopy', :endingevent=>'Surgery')
+	fluentinfo_set.insert(:fluentname=>'biopsy_f', :initialvalue=>false, :initiatingevent=>'Biopsy', :endingevent=>'Surgery')
+	fluentinfo_set.insert(:fluentname=>'chemotherapy_f', :initialvalue=>false, :initiatingevent=>'Chemotherapy', :endingevent=>'Surgery')
+	fluentinfo_set.insert(:fluentname=>'surgery_f', :initialvalue=>false, :initiatingevent=>'Surgery', :endingevent=>'')
+
+	### Create fluent instance table if it doesn't exist
+	if not DB.table_exists?(:fluentinstance)
+		DB.create_table :fluentinstance do
+		  String :fluentname
+		  Boolean :value
+		  String :patientname
+		end
+	end
+	#insert a fluent info examples
+	fluentinstance_set = DB[:fluentinstance]
+	fluentinstance_set.delete
 
 end

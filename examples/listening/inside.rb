@@ -29,8 +29,7 @@ class Listener
     
     #Else if a task is ended
     elsif "#{type}"=="end"
-	if prog.puid==prog.root
-		puts "T is over"
+	if prog.puid==prog.root #end of treatment
 		@gui.endTreatment
 	end
 	@gui.updateFrame

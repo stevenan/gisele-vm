@@ -6,12 +6,13 @@ class DBAccess
 
 	def initialize
 		@DB = Sequel.sqlite('myDB.db')
-		@mean_time = Hash.new
 		@taskinfo_set = @DB[:taskinfo]
 		@taskinstance_set = @DB[:taskinstance]
 		@patient_set = @DB[:patient]
 		@treatment_set = @DB[:treatment]
 		@variable_set = @DB[:variable]
+		@fluentinfo_set = @DB[:fluentinfo]
+		@fluentinstance_set = @DB[:fluentinstance]
 	end
 
 	def updatetasktime(id, column)
@@ -202,7 +203,6 @@ class DBAccess
 	end
 
 	def checkCondition(vmid, task, treatment, patient)
-		vars=@variable_set.where(:patientname => patient).select_map([:variablename, :value])
 		conditions=getCondition(task, treatment)
 		failed_s=""
 		if conditions!=""
@@ -247,6 +247,18 @@ class DBAccess
 					else
 						failed_s+=c	
 					end
+				elsif c.include?("!=")
+					c_array=c.split("!=")
+					var=c_array[0].strip
+					val=c_array[1].strip
+					if hasVariable(patient, var)
+						current_val=getValue(patient, var)
+						if current_val.to_i==val.to_i
+							failed_s+=c
+						end
+					else
+						failed_s+=c	
+					end
 				elsif c.include?("<")
 					c_array=c.split("<")
 					var=c_array[0].strip
@@ -275,6 +287,62 @@ class DBAccess
 			}
 		end 
 		setConditionFailure(vmid, failed_s)
+	end
+
+	def getFluentInitialValue(fluent)
+		@fluentinfo_set.where(:fluentname=>fluent).get(:initialvalue)
+	end
+
+	def getFluentsTreatment(treatment)
+		@treatment_set.where(:name=>treatment).get(:fluents)
+	end
+	
+	def getPatientFluents(patient)
+		fluents=@fluentinstance_set.where(:patientname=>patient).select_map([:fluentname, :value])
+		fluents_s=""
+		fluents.each{ |f, v|
+			if fluents_s!=""
+				fluents_s+="\n"
+			end
+			fluents_s+="#{f} = #{v}"
+		}
+		fluents_s
+	end
+
+	def addFluentInstance(fluentname, patientname)
+		@fluentinstance_set.insert(:fluentname=>fluentname, :value=>getFluentInitialValue(fluentname), :patientname=>patientname)
+		puts "create #{fluentname} with value #{getFluentInitialValue(fluentname)} for #{patientname}"
+	end
+
+	def updateFluentInstance(fluent, patient, value)
+		@fluentinstance_set.where(:fluentname=>fluent, :patientname=>patient).update(:value=>value)
+		puts "update #{fluent} with value #{value} for #{patient}"
+	end
+
+	def initPatientFluents(patient, treatment)
+		fluents=getFluentsTreatment(treatment)
+		fluents.split(',').each{|f|
+			addFluentInstance(f.strip, patient)
+		}
+	end
+
+	def updateFluentsPatient(patient, task)
+		treatment=getPatientTreatment(patient)
+		fluents_s=getFluentsTreatment(treatment)
+		fluents_s.split(',').each{|f|
+			fluent=f.strip
+			init_events=@fluentinfo_set.where(:fluentname=>fluent).get(:initiatingevent)
+			end_events=@fluentinfo_set.where(:fluentname=>fluent).get(:endingevent)
+			if init_events.include?(task)
+				updateFluentInstance(fluent, patient, true)
+			elsif end_events.include?(task)
+				updateFluentInstance(fluent, patient, false)
+			end
+		}
+	end
+
+	def deletePatientFluents(patient)
+		@fluentinstance_set.where(:patientname=>patient).delete
 	end
 
 end

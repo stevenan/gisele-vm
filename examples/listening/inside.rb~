@@ -29,7 +29,7 @@ class Listener
     
     #Else if a task is ended
     elsif "#{type}"=="end"
-	if prog.puid==prog.root
+	if prog.puid==prog.root #end of treatment
 		puts "T is over"
 		@gui.endTreatment
 	end
@@ -51,8 +51,10 @@ class Listener
         puts "Variance is equal to #{variance}"
 =end
     end
+=begin
     puts "Tasks started but not ended yet : #{@start_array.inspect}"
     puts "Tasks ended : #{@end_array.inspect}"
+=end
   end
   
 end
