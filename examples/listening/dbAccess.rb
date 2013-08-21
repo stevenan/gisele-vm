@@ -245,20 +245,6 @@ class DBAccess
 						missing=appends(missing,c)
 						failed_s=appends(failed_s,c)	
 					end
-				elsif c.include?("=")
-					c_array=c.split("=")
-					var=c_array[0].strip
-					val=c_array[1].strip
-					if hasVariable(patient, var)
-						current_val=getValue(patient, var)
-						if current_val.to_i!=val.to_i
-							failed_s=appends(failed_s,c)
-							wrong=appends(wrong,c)
-						end
-					else
-						missing=appends(missing,c)
-						failed_s=appends(failed_s,c)	
-					end
 				elsif c.include?("!=")
 					c_array=c.split("!=")
 					var=c_array[0].strip
@@ -266,6 +252,20 @@ class DBAccess
 					if hasVariable(patient, var)
 						current_val=getValue(patient, var)
 						if current_val.to_i==val.to_i
+							failed_s=appends(failed_s,c)
+							wrong=appends(wrong,c)
+						end
+					else
+						missing=appends(missing,c)
+						failed_s=appends(failed_s,c)	
+					end
+				elsif c.include?("=")
+					c_array=c.split("=")
+					var=c_array[0].strip
+					val=c_array[1].strip
+					if hasVariable(patient, var)
+						current_val=getValue(patient, var)
+						if current_val.to_i!=val.to_i
 							failed_s=appends(failed_s,c)
 							wrong=appends(wrong,c)
 						end
