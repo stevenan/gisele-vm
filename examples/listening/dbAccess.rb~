@@ -202,15 +202,21 @@ class DBAccess
 		@treatment_set.where(:name=>treatment).update(:counter=>c+1)
 	end
 
+	def appends(s,s1)
+		if s != ""
+			s+="\n"
+		end
+		s+=s1
+	end
+
 	def checkCondition(vmid, task, treatment, patient)
 		conditions=getCondition(task, treatment)
+		missing=""
+		wrong=""
 		failed_s=""
 		if conditions!=""
 			conditions.split(",").each {|c|
 				c_array=[]
-				if failed_s!=""
-					failed_s+="\n"
-				end
 				if c.include?("<=")
 					c_array=c.split("<=")
 					var=c_array[0].strip
@@ -218,10 +224,12 @@ class DBAccess
 					if hasVariable(patient, var)
 						current_val=getValue(patient, var)
 						if current_val.to_i>val.to_i
-							failed_s+=c
+							failed_s=appends(failed_s,c)
+							wrong=appends(wrong,c)
 						end
 					else
-						failed_s+=c	
+						missing=appends(missing,c)
+						failed_s=appends(failed_s,c)	
 					end
 				elsif c.include?(">=")
 					c_array=c.split(">=")
@@ -230,10 +238,12 @@ class DBAccess
 					if hasVariable(patient, var)
 						current_val=getValue(patient, var)
 						if current_val.to_i<val.to_i
-							failed_s+=c
+							failed_s=appends(failed_s,c)
+							wrong=appends(wrong,c)
 						end
 					else
-						failed_s+=c	
+						missing=appends(missing,c)
+						failed_s=appends(failed_s,c)	
 					end
 				elsif c.include?("=")
 					c_array=c.split("=")
@@ -242,10 +252,12 @@ class DBAccess
 					if hasVariable(patient, var)
 						current_val=getValue(patient, var)
 						if current_val.to_i!=val.to_i
-							failed_s+=c
+							failed_s=appends(failed_s,c)
+							wrong=appends(wrong,c)
 						end
 					else
-						failed_s+=c	
+						missing=appends(missing,c)
+						failed_s=appends(failed_s,c)	
 					end
 				elsif c.include?("!=")
 					c_array=c.split("!=")
@@ -254,10 +266,12 @@ class DBAccess
 					if hasVariable(patient, var)
 						current_val=getValue(patient, var)
 						if current_val.to_i==val.to_i
-							failed_s+=c
+							failed_s=appends(failed_s,c)
+							wrong=appends(wrong,c)
 						end
 					else
-						failed_s+=c	
+						missing=appends(missing,c)
+						failed_s=appends(failed_s,c)	
 					end
 				elsif c.include?("<")
 					c_array=c.split("<")
@@ -266,10 +280,12 @@ class DBAccess
 					if hasVariable(patient, var)
 						current_val=getValue(patient, var)
 						if current_val.to_i>=val.to_i
-							failed_s+=c
+							failed_s=appends(failed_s,c)
+							wrong=appends(wrong,c)
 						end
 					else
-						failed_s+=c	
+						missing=appends(missing,c)
+						failed_s=appends(failed_s,c)	
 					end
 				elsif c.include?(">")
 					c_array=c.split(">")
@@ -278,15 +294,18 @@ class DBAccess
 					if hasVariable(patient, var)
 						current_val=getValue(patient, var)
 						if current_val.to_i<=val.to_i
-							failed_s+=c
+							failed_s=appends(failed_s,c)
+							wrong=appends(wrong,c)
 						end
 					else
-						failed_s+=c	
+						missing=appends(missing,c)
+						failed_s=appends(failed_s,c)	
 					end
 				end
 			}
 		end 
 		setConditionFailure(vmid, failed_s)
+		[missing, wrong]
 	end
 
 	def getFluentInitialValue(fluent)
@@ -311,12 +330,10 @@ class DBAccess
 
 	def addFluentInstance(fluentname, patientname)
 		@fluentinstance_set.insert(:fluentname=>fluentname, :value=>getFluentInitialValue(fluentname), :patientname=>patientname)
-		puts "create #{fluentname} with value #{getFluentInitialValue(fluentname)} for #{patientname}"
 	end
 
 	def updateFluentInstance(fluent, patient, value)
 		@fluentinstance_set.where(:fluentname=>fluent, :patientname=>patient).update(:value=>value)
-		puts "update #{fluent} with value #{value} for #{patient}"
 	end
 
 	def initPatientFluents(patient, treatment)
@@ -342,7 +359,6 @@ class DBAccess
 	end
 
 	def deletePatientFluents(patient)
-		puts @fluentinstance_set.where(:patientname=>patient).select_map(:value)
 		@fluentinstance_set.where(:patientname=>patient).delete
 	end
 

@@ -669,7 +669,44 @@ class MyGUI
 				command {
 					 if tlabel=="start"
 						@@dbAccess.updatetasktime(vmid, :starttime)
-						@@dbAccess.checkCondition(vmid, task, treatment, patient)
+						wrong=@@dbAccess.checkCondition(vmid, task, treatment, patient)
+						if wrong[0] != "" or wrong[1] !=""
+							box= TkToplevel.new{ title "Condition(s) not respected!"}
+							TkLabel.new(box) {
+								text "Patient doesn't have corresponding variable : "
+								font TkFont.new('times 12')
+								grid('row'=>0, 'column'=>0)
+							}
+							if wrong[0]==""
+								wrong[0]="/"
+							end
+							TkLabel.new(box) {
+								text wrong[0]
+								font TkFont.new('times 12')
+								grid('row'=>0, 'column'=>1)
+							}
+							if wrong[1]==""
+								wrong[1]="/"
+							end
+							TkLabel.new(box) {
+								text "Value doesn't respect the condition : "
+								font TkFont.new('times 12')
+								grid('row'=>1, 'column'=>0)
+							}
+							TkLabel.new(box) {
+								text wrong[1]
+								font TkFont.new('times 12')
+								grid('row'=>1, 'column'=>1)
+							}
+							TkButton.new(box) do
+							command {box.destroy}
+							text "ok"
+							state "normal"
+							cursor "watch"
+							font TkFont.new('times 12')
+							grid('row'=>2, 'column'=>0)
+						end
+						end
 						tlabel="stop"
 						b.text(tlabel)
 					 else
