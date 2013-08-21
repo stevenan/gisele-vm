@@ -248,12 +248,20 @@ class MyGUI
 			  grid('row'=>0, 'column'=>3)
 			}
 			TkLabel.new(new_window, "width"=>20) {
+			  text "Fluents:"
+			  font TkFont.new('times 12 bold')
+                          relief "ridge"
+			  borderwidth 5
+			  width 20
+			  grid('row'=>0, 'column'=>4)
+			}
+			TkLabel.new(new_window, "width"=>20) {
 			  text "  "
 			  font TkFont.new('times 12 bold')
                           
 			  borderwidth 5
 			  width 20
-			  grid('row'=>0, 'column'=>4)
+			  grid('row'=>0, 'column'=>5)
 			}
 			index=1
 			patient_array=@@dbAccess.getPatientArray
@@ -297,6 +305,17 @@ class MyGUI
 					compound 'center'
 					justify 'left'
 					grid('row'=>index, 'column'=>3)
+				}
+				String f=""
+				f=@@dbAccess.getPatientFluents(patientname)
+				if f==""
+					f+="No Fluent for that patient"
+				end
+				TkLabel.new(new_window, "width"=>20, "borderwidth"=>5){
+					text f
+					compound 'center'
+					justify 'left'
+					grid('row'=>index, 'column'=>4)
 				}
 				TkButton.new(new_window) do
 					command{
@@ -371,7 +390,7 @@ class MyGUI
 					state "normal"
 					cursor "watch"
 					font TkFont.new('times 12')
-					grid('row'=>index,'column'=>4)
+					grid('row'=>index,'column'=>5)
 				end
 				index+=1
 			end

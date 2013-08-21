@@ -32,7 +32,7 @@ class InitDB
 	variable_set.delete
 	variable_set.insert(:variablename=>"Height", :patientname=>"Jean", :value=>"152")
 	variable_set.insert(:variablename=>"Height", :patientname=>"Pierre", :value=>"150")
-	variable_set.insert(:variablename=>"Height", :patientname=>"Paul", :value=>"150")
+	#variable_set.insert(:variablename=>"Height", :patientname=>"Paul", :value=>"150")
 	variable_set.insert(:variablename=>"Weight", :patientname=>"Jean", :value=>"50")
 	variable_set.insert(:variablename=>"Blood pressure", :patientname=>"Jean", :value=>"14")
 	variable_set.insert(:variablename=>"Blood pressure", :patientname=>"Pierre", :value=>"15")
